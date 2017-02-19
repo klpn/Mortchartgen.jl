@@ -1,0 +1,9 @@
+[client]
+user=
+password=
+
+[mysqlimport]
+local=1
+ignore-lines=1
+fields-terminated-by=','
+socket=/run/mysqld/mysqld.sock

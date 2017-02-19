@@ -1,0 +1,846 @@
+{
+    "causeclasses": {
+        "0": {
+            "alias": {"sv": "Totalt"},
+            "makedoc": false,
+            "makegroup": false
+        },
+        "1": {
+            "alias": {"sv": "Infektioner"},
+            "makedoc": true,
+            "makegroup": true
+        },
+        "2": {
+            "alias": {"sv": "Tumörer"},
+            "makedoc": true,
+            "makegroup": true
+        },
+        "3": {
+            "alias": {"sv": "Cirkulation"},
+            "makedoc": true,
+            "makegroup": true
+        },
+        "4": {
+            "alias": {"sv": "Annat sjukdomsrelaterat"},
+            "makedoc": true,
+            "makegroup": true
+        },
+        "5": {
+            "alias": {"sv": "Illa definierade orsaker"},
+            "makedoc": true,
+            "makegroup": false
+        },
+        "6": {
+            "alias": {"sv": "Yttre orsaker"},
+            "makedoc": true,
+            "makegroup": true
+        }
+    },
+    "causedist": [
+        "circ",
+        "tum",
+        "lfinf",
+        "stihiv",
+        "neurdegnovd",
+        "illdef",
+        "sui",
+        "tracc",
+        "ext"
+    ],
+    "causes": {
+        "all": {
+            "alias": {"sv": "totalt"},
+            "causeclass": 0,
+            "causeexpr": {
+                "07A": "A000",
+                "08A": "A000",
+                "09B": "B00",
+                "10": "AAA",
+                "101": "1000"
+            },
+            "classtot": true,
+            "sex": 0
+        },
+        "bc": {
+            "alias": {"sv": "bröstcancer"},
+            "causeclass": 2,
+            "causeexpr": {
+                "07A": "A051",
+                "08A": "A054",
+                "09B": "B113",
+                "10": "C50",
+                "101": "1036"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 170; ICD-8/9: 174; ICD-10: C50",
+            "sex": 2,
+            "skip": [
+                "Pop38mean"
+            ]
+        },
+        "cervc": {
+            "alias": {"sv": "cervixcancer"},
+            "causeclass": 2,
+            "causeexpr": {
+                "07A": "A052",
+                "08A": "A055",
+                "09B": "B120",
+                "10": "C53",
+                "101": "1037"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 171; ICD-8/9: 180; ICD-10: C53",
+            "note": "Inkluderar cancer i livmoderhals.",
+            "sex": 2,
+            "skip": [
+                "Pop38mean"
+            ]
+        },
+        "chresp": {
+            "alias": {"sv": "kronisk lungsjukdom"},
+            "causeclass": 4,
+            "causeexpr": {
+                "07A": "A09[3-7]",
+                "08A": "A09[3-6]",
+                "09B": "B32[3-9]",
+                "10": "J[3-9]",
+                "101": "107[6,7]"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 501--527; ICD-8/9: 490--519; ICD-10: J00--J98",
+            "note": "Inkluderar KOL, astma och andra sjukdomar i andningsorganen utom infektioner och tumörer.",
+            "sex": 0,
+            "skip": [
+                "Pop38mean"
+            ]
+        },
+        "circ": {
+            "alias": {"sv": "cirkulationsorgan"},
+            "causeclass": 3,
+            "causeexpr": {
+                "07A": "A0(70|79|8[0-6])",
+                "08A": "A08[0-8]",
+                "09B": "B(2[5-9]|30)$",
+                "10": "(I|F01)",
+                "101": "1064"
+            },
+            "classtot": true,
+            "codedesc": "ICD-6/7: 330--334, 400--468; ICD-8/9: 390--459; ICD-10: F01, I00--I99",
+            "note": "Inkluderar hjärtsjukdomar, slaganfall (för ICD-10 även vaskulär demens) och andra åkommor i cirkulationsorganen. \"Hjärtkärlsjukdom\" och \"kardiovaskulär sjukdom\" används ofta som synonyma uttryck, men de kan även syfta på undergrupper av kategorin.",
+            "sex": 0
+        },
+        "circnonath": {
+            "alias": {"sv": "cirkulationsorgan icke ateroskleros"},
+            "causeclass": 3,
+            "causeexpr": {
+                "07A": "A0(79|8[0,2-4,6])",
+                "08A": "A08[0-2,4,7-8]",
+                "09B": "B(2[5-6,8]|30[3-9])$",
+                "10": "I([0-1]|2[6-9]|[3-5,8-9])",
+                "101": "10(6[5-6,9]|71])"
+            },
+            "classtot": false,
+            "note": "Inkluderar alla koder i cirkulationskategorin utom de som ingår i ischemisk hjärtsjukdom, slaganfall eller övrig artärsjukdom. I huvudsak rör det sig om de tillstånd som ingår i den allmänna kategorin för hjärtsjukdom bortsett från ischemisk hjärtsjukdom. Benämningen \"icke ateroskleros\" skall inte tolkas för bokstavligt: denna kategori och ovanstående har medtagits p.g.a. den centrala betydelse ischemisk hjärtsjukdom och andra tillstånd som typiskt hänförts till \"ateroskleros\", och som ingår under slaganfall eller övrig artärsjukdom, haft när det gäller tidstrender för cirkulationskategorin som helhet i många befolkningar.",
+            "sex": 0,
+            "skip": [
+                "Pop38mean"
+            ]
+        },
+        "circnonihd": {
+            "alias": {"sv": "cirkulationsorgan utom IHD"},
+            "causeclass": 3,
+            "causeexpr": {
+                "07A": "A0(70|79|8[0,2-6])",
+                "08A": "A08[0-2,4-8]",
+                "09B": "B(2[5-6,8-9]|30)$",
+                "10": "(I([0-1]|2[6-9]|[3-9])|F01)",
+                "101": "10(6[5-6,8-9]|7[0-1])"
+            },
+            "classtot": false,
+            "note": "Inkluderar alla koder i cirkulationskategorin utom de som ingår i ischemisk hjärtsjukdom.",
+            "sex": 0,
+            "skip": [
+                "Pop38mean"
+            ]
+        },
+        "diab": {
+            "alias": {"sv": "diabetes"},
+            "causeclass": 4,
+            "causeexpr": {
+                "07A": "A063",
+                "08A": "A064",
+                "09B": "B181",
+                "10": "E1[0-4]",
+                "101": "1052"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 260; ICD-8/9: 250; ICD-10: E10--E14",
+            "note": "Diabetes mellitus (typ 1 eller typ 2). Benägenheten att rapportera diabetes snarare än komplikationer (t.ex. ischemisk hjärtsjukdom) som underliggande dödsorsak varierar ofta mellan befolkningar och tidsperioder.",
+            "sex": 0
+        },
+        "ext": {
+            "alias": {"sv": "yttre orsaker"},
+            "causeclass": 6,
+            "causeexpr": {
+                "07A": "A1(3[8,9]|[4,5])",
+                "08A": "A1(3[8,9]|[4,5])",
+                "09B": "B(4[7-9]|5[0-6])$",
+                "10": "[V-Y]",
+                "101": "1095"
+            },
+            "classtot": true,
+            "codedesc": "ICD-6/7: E800--E999; ICD-10: V01--Y89",
+            "note": "Inkluderar olyckor, självmord, mord, legala ingripanden och även komplikationer i samband med vård (även om bakomliggande sjukdomar då ofta rapporteras som underliggande dödsorsak).",
+            "sex": 0
+        },
+        "fallacc": {
+            "alias": {"sv": "fallolyckor"},
+            "causeclass": 6,
+            "causeexpr": {
+                "07A": "A141",
+                "08A": "A141",
+                "09B": "B50",
+                "10": "W[0-1]",
+                "101": "1097"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: E900--E904; ICD-8: E880--E887; ICD-9: E880--E888; ICD-10: W00--W19",
+            "note": "Trender kan påverkas av benägenheten att rapportera ospecificerade olyckor eller komplikationer vid fall (t.ex. blodpropp eller lunginflammation) som underliggande dödsorsak.",
+            "sex": 0
+        },
+        "gastrinf": {
+            "alias": {"sv": "magtarminfektioner"},
+            "causeclass": 1,
+            "causeexpr": {
+                "07A": "A(0(1[2-4,6])|104)",
+                "08A": "A0(0[1-5])",
+                "09B": "B01$",
+                "10": "A0",
+                "101": "100[2-4]"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 040--043, 045--048, 571, 572; ICD-8: 000--003, 004, 006, 008, 009; ICD-9: 001--009; ICD-10: A00--A09",
+            "note": "Inkluderar olika typer av infektioner i magtarmkanalen. Kategorin är känslig för konstlade trender genom att dessa tillstånd ibland förts till vissa kategorier i kapitlet för sjukdomar i matsmältningsorganen (och WHO:s kondenserade listor kan inte användas för att skilja ut dessa).",
+            "sex": 0
+        },
+        "genbact": {
+            "alias": {"sv": "allmänna bakterieinfektioner"},
+            "causeclass": 1,
+            "causeexpr": {
+                "07A": "A(0(1[5,7-9]|2[0-7]|71)|110)",
+                "08A": "A(0(1[1-9]|2[0-1]|72)|107)",
+                "09B": "B(03$|220|351)",
+                "10": "(A[2-4]|G0[0,3]|N1[0-2])",
+                "101": "10(0[7-9]|1[0-2]|59)"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 044, 050--053, 055--058, 060--062, 340, 600; ICD-8: 005, 007, 020--039, 320, 590; ICD-9: 020--041, 320--322, 590; ICD-10: A20--A49, G00, G03, N10--N12",
+            "note": "Inkluderar sepsis och andra bakteriella infektioner i inledningskapitlet i ICD-versionerna som inte ingår i ovanstående kategorier, meningit och njurinfektioner.",
+            "sex": 0
+        },
+        "hd": {
+            "alias": {"sv": "hjärtsjukdom"},
+            "causeclass": 3,
+            "causeexpr": {
+                "07A": "A0(79|8[0-4])",
+                "08A": "A08[0-4]",
+                "09B": "B2[5-8]$",
+                "10": "I[0-5]",
+                "101": "106[5-8]"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 400--447; ICD-8/9: 390--429; ICD-10: I00--I51",
+            "note": "Inkluderar hjärtrelaterade tillstånd, inklusive ischemisk hjärtsjukdom, högt blodtryck, lungkärlssjukdom, myokardit, kardiomyopati, klaffel och funktionella hjärtdiagnoser (t.ex. hjärtsvikt).",
+            "sex": 0
+        },
+        "ihd": {
+            "alias": {"sv": "ischemisk hjärtsjukdom"},
+            "causeclass": 3,
+            "causeexpr": {
+                "07A": "A081",
+                "08A": "A083",
+                "09B": "B27$",
+                "10": "I2[0-5]",
+                "101": "1067"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 420--422; ICD-8/9: 410--414; ICD-10: I20--I25",
+            "note": "Inkluderar hjärtinfarkt och andra tillstånd som beror på otillräcklig syreförsörjning av hjärtmuskel. \"Kranskärlssjukdom\" används ofta som mer eller mindre synonymt uttryck. Den engelska förkortningen IHD (\"ischemic heart disease\") är också vanlig. Observera att begreppet inte finns i klassifikationer före ICD-8: den närmaste motsvarande kategorin i ICD-6/7, som kan tas fram utifrån de kategorier som finns tillgängliga via @whomort, är \"arteriosklerotiska och degenerativa hjärtsjukdomar\". För vissa befolkningar (t.ex. Italien och Japan) uppstår då tydliga konstlade trender vid övergången till ICD-8.",
+            "sex": 0,
+            "skip": [
+                "Pop38mean"
+            ]
+        },
+        "illdef": {
+            "alias": {"sv": "illa definierade orsaker"},
+            "causeclass": 5,
+            "causeexpr": {
+                "07A": "A13[6,7]",
+                "08A": "A13[6,7]",
+                "09B": "B46$",
+                "10": "R",
+                "101": "1094"
+            },
+            "classtot": true,
+            "codedesc": "ICD-6/7/8/9: 780--799; ICD-10: R00--R99",
+            "note": "Inkluderar koder i näst sista kapitlet i ICD-klassifikationerna, som dödsfall utan specificerad orsak, symptom utan angiven bakomliggande orsak och \"senilitet\" (hög ålder utan angiven demens). En hög andel dödsfall i denna kategori för en befolkning och tidsperiod kan indikera bristande kvalitet hos statistiken och innebär att trender för andra dödsorsaker måste tolkas med försiktighet. Det finns koder i andra ICD-kapitel som kan betraktas som \"illa definierade\" när de rapporteras som underliggande dödsorsaker (t.ex. hjärt- eller andningssvikt utan angiven orsak). En del formellt väldefinierade koder kan i vissa befolkningar också överrapporteras på ett sätt som urholkar deras diagnostiska mening (t.ex. ischemisk hjärtsjukdom bland äldre).",
+            "sex": 0
+        },
+        "infrest": {
+            "alias": {"sv": "övriga infektioner"},
+            "causeclass": 1,
+            "causeexpr": {
+                "07A": "A0(2[8-9]|3|4[0-3])",
+                "08A": "A0(2[2-9]|3[0-3,9]|4[0-4])",
+                "09B": "B(0[4,5,7])$",
+                "10": "(A(6[5-9]|[7-9])|B([0-1]|2[5-9]|[3-9]))",
+                "101": "10(1[4-9]|2[1-5])"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 036--039, 049, 054, 059, 063--138; ICD-8: 040--089, 099--136; ICD-9: 045--088, 100--139; ICD-10: A65--B19, B25--B99",
+            "note": "Inkluderar infektioner i inledningskapitlet i ICD-versionerna förutom de som ingår i ovanstående kategorier, som olika infektioner orsakade av virus, parasiter och svampar och ospecificerade infektioner. Dramatiska ökningar och minskningar bland framför allt yngre män i vissa befolkningar under 80- och 90-talen beror på att ospecifika koder i denna kategori använts för HIV-infektion under vissa perioder.",
+            "sex": 0
+        },
+        "intc": {
+            "alias": {"sv": "tarmcancer"},
+            "causeclass": 2,
+            "causeexpr": {
+                "07A": "A04[7-8]",
+                "08A": "A04[8-9]",
+                "09B": "B09[2-4]",
+                "10": "C(1[7-9]|2[0-1])",
+                "101": "1030"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7/8/9: 152--154; ICD-10: C17--C21",
+            "note": "Inkluderar cancer i tunn-, tjock- och ändtarm.",
+            "sex": 0,
+            "skip": [
+                "Pop38mean"
+            ]
+        },
+        "lc": {
+            "alias": {"sv": "lungcancer"},
+            "causeclass": 2,
+            "causeexpr": {
+                "07A": "A050",
+                "08A": "A051",
+                "09B": "B101",
+                "10": "C3[3-4]",
+                "101": "1034"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 162--163; ICD-8/9: 162; ICD-10: C33--C34",
+            "note": "Inkluderar cancer i luftstrupe och bronk.",
+            "sex": 0,
+            "skip": [
+                "Pop38mean"
+            ]
+        },
+        "leuk": {
+            "alias": {"sv": "leukemi"},
+            "causeclass": 2,
+            "causeexpr": {
+                "07A": "A058",
+                "08A": "A059",
+                "09B": "B141",
+                "10": "C9[1-5]",
+                "101": "1045"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 204; ICD-8: 204--207; ICD-9: 204--208; ICD-10: C91--C95",
+            "note": "Inkluderar akut och kronisk leukemi.",
+            "sex": 0
+        },
+        "lfinf": {
+            "alias": {"sv": "luftvägsinfektioner"},
+            "causeclass": 1,
+            "causeexpr": {
+                "07A": "A0(8[7-9]|9[0-2])",
+                "08A": "A0(89|9[0-2])",
+                "09B": "B3[1,2][0-2]",
+                "10": "J[0-2]",
+                "101": "107[3-5]"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 470--500; ICD-8: 460--486; ICD-9: 460--466, 480--487; ICD-10: J00--J22",
+            "note": "Inkluderar influensa, lunginflammation och andra luftvägsinfektioner (ej tuberkulos). Ofta känslig för konstlade trender när det gäller rapportering av dessa som underliggande dödsorsak.",
+            "sex": 0
+        },
+        "lymc": {
+            "alias": {"sv": "lymfom/myelom"},
+            "causeclass": 2,
+            "causeexpr": {
+                "07A": "A059",
+                "08A": "A060",
+                "09B": "B14[09]",
+                "10": "C(8[1-9]|9[06])",
+                "101": "104[34]"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 200--203, 205; ICD-8: 200--203, 208, 209; ICD-9: 200--203; ICD-10: C81--C90, C96",
+            "note": "Inkluderar lymfom (Hodgkin och non-Hodgkin), myelom och andra typer av cancer i lymfatisk eller blodbildande vävnad utom leukemi.",
+            "sex": 0
+        },
+        "neurdeg": {
+            "alias": {"sv": "demens/neurodegenerativ"},
+            "causeclass": 4,
+            "causeexpr": {
+                "07A": "A0(67|7[28])",
+                "08A": "A0(69|7[39])",
+                "09B": "B2(10|2[1-3])",
+                "10": "F0|G[1-3]",
+                "101": "10(55|6[01])"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 300--309, 341--352, 354--369, 380--384, 386, 388--390, 394--398; ICD-8: 290--299, 321--344, 346--358, 370--373, 376--380, 384--389; ICD-9: 290, 330--340; ICD-10: F01--F09, G10--G37 (för lista 101 F01--F99, G04--G98)",
+            "note": "Inkluderar neurodegenerativa sjukdomar (alzheimers, parkinsons, multipel skleros m.m.), inklusive sådana som räknas till s.k. organiska störningar i kapitlet för psykiatriska diagnoser. Ökningar av andelen dödsfall bland äldre på senare år är till stor del relaterade till ökad benägenhet att rapportera demensrelaterade tillstånd snarare än t.ex. lunginflammation eller ateroskleros som underliggande dödsorsak (jämför med de uppskattningar av trender för demens från 1980-talet baserade på prevalens som finns tillgängliga via @ihmecodviz).",
+            "sex": 0
+        },
+        "neurdegnovd": {
+            "alias": {"sv": "demens/neurodegenerativ ej VD"},
+            "causeclass": 4,
+            "causeexpr": {
+                "07A": "A0(67|7[28])",
+                "08A": "A0(69|7[39])",
+                "09B": "B2(10|2[1-3])",
+                "10": "F0[3-9]|G[1-3]",
+                "101": "10(55|6[01])"
+            },
+            "classtot": false,
+            "note": "Är identisk med kategorin för demens och neurodegenerativa sjukdomar, men inkluderar inte F01, vaskulär demens för ICD-10 med detaljlista (och överlappar därför inte med slaganfall).",
+            "sex": 0
+        },
+        "neurt": {
+            "alias": {"sv": "tumörer nervsystem"},
+            "causeclass": 2,
+            "causeexpr": {
+                "07A": "193",
+                "08A": "19[12]|2(25|38)",
+                "09B": "B1(30|55)|192|237",
+                "10": "C7[0-2]|D[34][23]",
+                "101": "1042"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 193; ICD-8: 191--192, 225, 238; ICD-9: 191--192, 225, 237; ICD-10: C70--C72, D32--D33, D42--D43 (för lista 101 enbart C70--C72)",
+            "note": "Inkluderar tumörer i hjärnan och andra delar av nervsystemet.",
+            "sex": 0,
+            "skipyrs": [
+                1952
+            ]
+        },
+        "othath": {
+            "alias": {"sv": "artärsjukdom utom IHD/slaganfall"},
+            "causeclass": 3,
+            "causeexpr": {
+                "07A": "A085",
+                "08A": "A086",
+                "09B": "B30[0-2]",
+                "10": "I7",
+                "101": "1070"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 450--456; ICD-8/9: 440--448; ICD-10: I70--I79",
+            "note": "Inkluderar artärsjukdomar som inte ingår i de båda ovanstående grupperna (ateroskleros utanför hjärtat eller hjärnan eller i ospecificerade delar av artärsystemet, aortabråck etc.). Inkluderar inte högt blodtryck.",
+            "sex": 0,
+            "skip": [
+                "Pop38mean"
+            ]
+        },
+        "ovac": {
+            "alias": {"sv": "äggstockscancer"},
+            "causeclass": 2,
+            "causeexpr": {
+                "07A": 175,
+                "08A": 183,
+                "09B": "B123",
+                "10": "C56",
+                "101": "1039"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 175; ICD-8/9: 183; ICD-10: C56",
+            "sex": 2,
+            "skip": [
+                "Pop38mean"
+            ],
+            "skipyrs": [
+                1952
+            ]
+        },
+        "panc": {
+            "alias": {"sv": "pankreascancer"},
+            "causeclass": 2,
+            "causeexpr": {
+                "07A": "157",
+                "08A": "157",
+                "09B": "B096",
+                "10": "C25",
+                "101": "1032"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7/8/9: 157; ICD-10: C25",
+            "note": "Inkluderar cancer i bukspottskörteln.",
+            "sex": 0,
+            "skip": [
+                "Pop38mean"
+            ],
+            "skipyrs": [
+                1952
+            ]
+        },
+        "pc": {
+            "alias": {"sv": "prostatacancer"},
+            "causeclass": 2,
+            "causeexpr": {
+                "07A": "A054",
+                "08A": "A057",
+                "09B": "B124",
+                "10": "C61",
+                "101": "1040"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 177; ICD-8/9: 185; ICD-10: C61",
+            "note": "Inkluderar inte åldersgrupper under 45 år på grund av alltför få fall.",
+            "sex": 1,
+            "skip": [
+                "Pop38mean",
+                "Pop914mean"
+            ]
+        },
+        "sc": {
+            "alias": {"sv": "magsäckscancer"},
+            "causeclass": 2,
+            "causeexpr": {
+                "07A": "A046",
+                "08A": "A047",
+                "09B": "B091",
+                "10": "C16",
+                "101": "1029"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/78/9: 151; ICD-10: C16",
+            "sex": 0,
+            "skip": [
+                "Pop38mean"
+            ]
+        },
+        "stihiv": {
+            "alias": {"sv": "könssjukdomar/HIV"},
+            "causeclass": 1,
+            "causeexpr": {
+                "07A": "A0(0[6-9]|1[0-1])",
+                "08A": "A03[4-8]",
+                "09B": "B(06$|18[4-5])",
+                "10": "(A(5|6[0-4])|B2[0-4])",
+                "101": "10(13|20)"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 020--035; ICD-8: 090--098; ICD-9: 090--099, 279.5, 279.6; ICD-10: A50--A64, B20--B24",
+            "note": "Inkluderar syfilis och andra infektioner som huvudsakligen överförs sexuellt samt HIV/AIDS (från ICD-9).",
+            "sex": 0
+        },
+        "str": {
+            "alias": {"sv": "slaganfall"},
+            "causeclass": 3,
+            "causeexpr": {
+                "07A": "A070",
+                "08A": "A085",
+                "09B": "B29$",
+                "10": "(I6|F01)",
+                "101": "1069"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 330--334; ICD-8/9: 430--438; ICD-10: F01, I60--I69 ",
+            "note": "Inkluderar hjärnblödning, hjärninfarkt och andra sjukdomar i hjärnans blodkärl. För ICD-10 inkluderas även vaskulär demens.",
+            "sex": 0,
+            "skip": [
+                "Pop38mean"
+            ]
+        },
+        "sui": {
+            "alias": {"sv": "självmord"},
+            "causeclass": 6,
+            "causeexpr": {
+                "07A": "A148",
+                "08A": "A147",
+                "09B": "B54",
+                "10": "X([6-7]|8[0-4])",
+                "101": "1101"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: E963, E970--E979; ICD-8/9: E950--E959; ICD-10: X60--X84",
+            "note": "Inkluderar även fall med bakomliggande psykisk sjukdom (t.ex. depression). Inkluderar inte fall med oklar avsikt. Trender kan påverkas av benägenheten att rapportera självmord.",
+            "sex": 0
+        },
+        "tb": {
+            "alias": {"sv": "tuberkulos"},
+            "causeclass": 1,
+            "causeexpr": {
+                "07A": "A00[1-5]",
+                "08A": "A0(0[6-9]|10])",
+                "09B": "B02$",
+                "10": "A1[5-9]",
+                "101": "100[5-6]"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 001--019; ICD-8: 010--019; ICD-9: 010--018; ICD-10: A15--A19",
+            "note": "Inkluderar lungtuberkulos och andra former av tuberkulos.",
+            "sex": 0
+        },
+        "tracc": {
+            "alias": {"sv": "transportolyckor"},
+            "causeclass": 6,
+            "causeexpr": {
+                "07A": "A13[8-9]",
+                "08A": "A13[8-9]",
+                "09B": "B47$",
+                "10": "V",
+                "101": "1096"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: E800--E866; ICD-8: E800--E845; ICD-9: E800--E848; ICD-10: V01--V99 ",
+            "note": "Inkluderar motorfordonsolyckor och andra typer av transportolyckor.",
+            "sex": 0
+        },
+        "tum": {
+            "alias": {"sv": "tumörer"},
+            "causeclass": 2,
+            "causeexpr": {
+                "07A": "A0(4[4-9]|5|60)",
+                "08A": "A0(4[5-9]|5|6[0-1])",
+                "09B": "B(0[8-9]$|1[0-7]$)",
+                "10": "(C|D[0-4])",
+                "101": "1026"
+            },
+            "classtot": true,
+            "codedesc": "ICD-6/7/8/9: 140--239; ICD-10: C00--D48",
+            "sex": 0
+        },
+        "utc": {
+            "alias": {"sv": "livmodercancer ej cervix"},
+            "causeclass": 2,
+            "causeexpr": {
+                "07A": "A053",
+                "08A": "A056",
+                "09B": "B12[12]",
+                "10": "C5[458]",
+                "101": "1038"
+            },
+            "classtot": false,
+            "codedesc": "ICD-6/7: 172--174; ICD-8/9: 181--182; ICD-10: C54--C55, C58",
+            "note": "Inkluderar cancer i livmoderkropp, moderkaka eller ospecificerad del av livmoder (vilket kan inkludera en del fall av ofullständigt klassificerad cervixcancer).",
+            "sex": 2,
+            "skip": [
+                "Pop38mean"
+            ]
+        }
+    },
+    "countries": {
+        "2090": {
+            "alias": {"sv": "Kanada"},
+            "countryclass": 1,
+            "endyear": 2005,
+            "iso3166": "CA",
+            "startyear": 1950
+        },
+        "2450": {
+            "alias": {"sv": "USA"},
+            "countryclass": 1,
+            "endyear": 2007,
+            "iso3166": "US",
+            "startyear": 1950
+        },
+        "3150": {
+            "alias": {"sv": "Israel"},
+            "countryclass": 1,
+            "endyear": 2013,
+            "iso3166": "IL",
+            "startyear": 1957
+        },
+        "3160": {
+            "alias": {"sv": "Japan"},
+            "countryclass": 1,
+            "endyear": 2013,
+            "iso3166": "JP",
+            "startyear": 1950
+        },
+        "4010": {
+            "alias": {"sv": "Österrike"},
+            "countryclass": 1,
+            "endyear": 2014,
+            "iso3166": "AT",
+            "startyear": 1955
+        },
+        "4020": {
+            "alias": {"sv": "Belgien"},
+            "countryclass": 1,
+            "endyear": 2013,
+            "iso3166": "BE",
+            "startyear": 1954
+        },
+        "4050": {
+            "alias": {"sv": "Danmark"},
+            "countryclass": 1,
+            "endyear": 2012,
+            "iso3166": "DK",
+            "startyear": 1951
+        },
+        "4070": {
+            "alias": {"sv": "Finland"},
+            "countryclass": 1,
+            "endyear": 2014,
+            "iso3166": "FI",
+            "startyear": 1952
+        },
+        "4080": {
+            "alias": {"sv": "Frankrike"},
+            "countryclass": 1,
+            "endyear": 2013,
+            "iso3166": "FR",
+            "startyear": 1952
+        },
+        "4085": {
+            "alias": {"sv": "Tyskland"},
+            "countryclass": 1,
+            "endyear": 2014,
+            "iso3166": "DE",
+            "startyear": 1952
+        },
+        "4140": {
+            "alias": {"sv": "Grekland"},
+            "countryclass": 1,
+            "endyear": 2013,
+            "iso3166": "GR",
+            "startyear": 1961
+        },
+        "4170": {
+            "alias": {"sv": "Irland"},
+            "countryclass": 1,
+            "endyear": 2013,
+            "iso3166": "IE",
+            "startyear": 1950
+        },
+        "4180": {
+            "alias": {"sv": "Italien"},
+            "countryclass": 1,
+            "endyear": 2012,
+            "iso3166": "IT",
+            "startyear": 1951
+        },
+        "4210": {
+            "alias": {"sv": "Nederländerna"},
+            "countryclass": 1,
+            "endyear": 2013,
+            "iso3166": "NL",
+            "startyear": 1950
+        },
+        "4220": {
+            "alias": {"sv": "Norge"},
+            "countryclass": 1,
+            "endyear": 2014,
+            "iso3166": "NO",
+            "startyear": 1951
+        },
+        "4240": {
+            "alias": {"sv": "Portugal"},
+            "countryclass": 1,
+            "endyear": 2013,
+            "iso3166": "PT",
+            "startyear": 1955
+        },
+        "4280": {
+            "alias": {"sv": "Spanien"},
+            "countryclass": 1,
+            "endyear": 2014,
+            "iso3166": "ES",
+            "startyear": 1951
+        },
+        "4290": {
+            "alias": {"sv": "Sverige"},
+            "countryclass": 0,
+            "endyear": 2014,
+            "iso3166": "SE",
+            "startyear": 1951
+        },
+        "4300": {
+            "alias": {"sv": "Schweiz"},
+            "countryclass": 1,
+            "endyear": 2013,
+            "iso3166": "CH",
+            "startyear": 1951
+        },
+        "4310": {
+            "alias": {"sv": "England/Wales"},
+            "countryclass": 1,
+            "endyear": 2013,
+            "iso3166": "EAW",
+            "startyear": 1950
+        },
+        "4320": {
+            "alias": {"sv": "Nordirland"},
+            "countryclass": 1,
+            "endyear": 2013,
+            "iso3166": "NIR",
+            "startyear": 1950
+        },
+        "4330": {
+            "alias": {"sv": "Skottland"},
+            "countryclass": 1,
+            "endyear": 2013,
+            "iso3166": "SCT",
+            "startyear": 1950
+        },
+        "5020": {
+            "alias": {"sv": "Australien"},
+            "countryclass": 1,
+            "endyear": 2014,
+            "iso3166": "AU",
+            "startyear": 1950
+        },
+        "5150": {
+            "alias": {"sv": "Nya Zeeland"},
+            "countryclass": 1,
+            "endyear": 2012,
+            "iso3166": "NZ",
+            "startyear": 1950
+        }
+    },
+    "ptypes": {
+        "perc": {
+            "alias": {"sv": "Andel dödsfall"}
+        },
+        "rate": {
+            "alias": {"sv": "Dödstal"}
+        }
+    },
+    "settings": {
+        "conn_config": {
+            "database": "Morticd",
+            "host": "localhost",
+            "password": "whomort",
+            "unix_socket": "/run/mysqld/mysqld.sock",
+            "user": "whomuser"
+        },
+        "savecsv": true
+    },
+    "sexes": {
+        "0": {
+            "alias": {"sv": "båda"},
+	    "color": "black"
+        },
+        "1": {
+            "alias": {"sv": "män"},
+	    "color": "red"
+        },
+        "2": {
+            "alias": {"sv": "kvinnor"},
+	    "color": "blue"
+        }
+    },
+    "pop": {
+	    "alias": {"sv": "folkmängd"}
+    },
+    "agemean": {
+	    "alias": {"sv": "genomsnitt över åldrar"}
+    }
+}
