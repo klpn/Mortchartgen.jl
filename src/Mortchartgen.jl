@@ -6,6 +6,9 @@ using DataFrames, DataStructures, JSON, MySQL, PyCall
 @pyimport bokeh.palettes as bpal
 
 datapath = normpath(Pkg.dir(), "Mortchartgen", "data")
+sitepath = normpath(Pkg.dir(), "Mortchartgen", "mortchart-site")
+chartpath = normpath(sitepath, "charts")
+mkpath(chartpath)
 conf = JSON.parsefile(normpath(datapath, "chartgen.json"),
 	dicttype=DataStructures.OrderedDict)
 tables = Dict(:deaths => "Deaths", :pop => "Pop")
@@ -13,8 +16,7 @@ dfarrmatch(col, arr) = map((x) -> in(x, arr), Vector(col))
 ctrycodes = map((x)->parse(x), collect(keys(conf["countries"])))
 perc_round(value) = replace("$(round(value, 4))", ".", ",")
 
-function cgen_frames(causekeys = keys(conf["causes"]))
-	causes = filter((k, v) -> k in causekeys, conf["causes"])
+function cgen_frames(causes = keys(conf["causes"]))
 	conn_config = conf["settings"]["conn_config"]
 	conn = mysql_connect(conn_config["host"], conn_config["user"],
 		conn_config["password"], conn_config["database"],
@@ -27,8 +29,8 @@ function cgen_frames(causekeys = keys(conf["causes"]))
 		map((x)->Symbol("$(tables[:pop])$(x)"), 1:26),
 		map((x)->Symbol("Age$(x)"), 1:26))
 	dthframes = DataStructures.OrderedDict()
-	for causekey in causekeys
-		causeexpr = causes[causekey]["causeexpr"]
+	for cause in causes
+		causeexpr = conf["causes"][cause]["causeexpr"]
 		selstat = *("Sex,Year,List,Country,Admin1,",
 			join(map((x)->"$(tables[:deaths])$x,", 1:25)),
 			"$(tables[:deaths])26")
@@ -46,7 +48,7 @@ function cgen_frames(causekeys = keys(conf["causes"]))
 		rename!(dthframe,
 			map((x)->Symbol("$(tables[:deaths])$(x)_sum"), 1:26),
 			map((x)->Symbol("Age$(x)"), 1:26))
-		dthframes[causekey] = hcat(DataFrame(Cause = fill(causekey, size(dthframe)[1])),
+		dthframes[cause] = hcat(DataFrame(Cause = fill(cause, size(dthframe)[1])),
 			dthframe)
 	end
 	mysql_disconnect(conn)
@@ -271,6 +273,100 @@ function propscat_sexesctry(ca1, ca2, countries, sage, eage, year, agemean,
 		bp.show(p)
 	else
 		bp.save(p)
+	end
+end
+
+batchages_caflt(cause) = filter((age)-> 
+	(age["startage"]==1 && age["endage"]==1) ||
+	(!(haskey(conf["causes"][cause], "lowerage")) ||
+	age["endage"]>=conf["causes"][cause]["lowerage"]) && 
+	(!(haskey(conf["causes"][cause], "upperage")) ||
+	age["startage"]<=conf["causes"][cause]["upperage"]),
+	conf["batchages"])
+
+function batchplot_sexesyrs(framedict, language, causes = keys(conf["causes"]),
+	countries = keys(conf["countries"]))
+	for ca1 in causes
+		sexes = conf["causes"][ca1]["sex"]
+		ages = batchages_caflt(ca1)
+		for country in countries
+			syr = conf["countries"][country]["startyear"]
+			eyr = conf["countries"][country]["endyear"]
+			for age in ages
+				ca2 = age["ca2"]
+				sage = age["startage"]
+				eage = age["endage"]
+				agemean = age["agemean"]
+				outfile = normpath(chartpath, *(ca1, ca2, country,
+					"s", string(sage), "e", string(eage),
+					"mean", string(agemean), ".html"))
+				propplot_sexesyrs(ca1, ca2, sexes, parse(country), 
+					sage, eage, syr:eyr,
+					agemean, framedict, language, outfile, false) 
+			end
+		end
+	end
+end
+
+function batchscat_yrsctry(framedict, language, causes = keys(conf["causes"]),
+	countries = keys(conf["countries"]), yrtups = conf["batchyrtups"])
+	for yrtup in yrtups
+		year1 = yrtup[1]
+		year2 = yrtup[2]
+		causes_flt = filter((ca)->
+			!(haskey(conf["causes"], "skipyrs")) || 
+			!(year1 in conf["causes"][ca]["skipyrs"] ||
+			(year2 in conf["causes"][ca]["skipyrs"])),
+			causes)
+		countries_flt = filter((ctry)->conf["countries"][ctry]["startyear"]<=year1
+			&& conf["countries"][ctry]["endyear"]>=year2, countries)
+		ctryints = map((c)->parse(c), countries_flt)
+		for ca1 in causes_flt
+			ages = batchages_caflt(ca1)
+			for age in ages
+				ca2 = age["ca2"]
+				sage = age["startage"]
+				eage = age["endage"]
+				agemean = age["agemean"]
+				for sex in conf["causes"][ca1]["sex"]
+					outfile = normpath(chartpath, *(ca1, ca2, string(sex),
+					"s", string(sage), "e", string(eage),
+					"mean", string(agemean), "ctries",
+					string(year1), "vs", string(year2), ".html"))
+					propscat_yrsctry(ca1, ca2, sex, ctryints,
+					sage, eage, year1, year2,
+					agemean, framedict, language, outfile, false)
+				end
+			end
+		end
+	end
+end
+
+function batchscat_sexesctry(framedict, language, causes = keys(conf["causes"]),
+	countries = keys(conf["countries"]), years = conf["batchsexesyrs"])
+	for year in years
+		causes_flt = filter((ca)->conf["causes"][ca]["sex"]==[2;1] &&
+			(!(haskey(conf["causes"], "skipyrs")) || 
+			!(year in conf["causes"][ca]["skipyrs"])),
+			causes)
+		countries_flt = filter((ctry)->conf["countries"][ctry]["startyear"]<=year
+			&& conf["countries"][ctry]["endyear"]>=year, countries)
+		ctryints = map((c)->parse(c), countries_flt)
+		for ca1 in causes_flt
+			ages = batchages_caflt(ca1)
+			for age in ages
+				ca2 = age["ca2"]
+				sage = age["startage"]
+				eage = age["endage"]
+				agemean = age["agemean"]
+				outfile = normpath(chartpath, *(ca1, ca2,
+					"s", string(sage), "e", string(eage),
+					"mean", string(agemean), "sexesctries", string(year), ".html"))
+				propscat_sexesctry(ca1, ca2, ctryints,
+					sage, eage, year,
+					agemean, framedict, language, outfile, false)
+			end
+		end
 	end
 end
 
