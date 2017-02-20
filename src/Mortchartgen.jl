@@ -91,6 +91,8 @@ subframe_sray(df, sex, countries, agelist, years) = df[((df[:Sex].==sex)
 dfgrp(df, grpcol, f = sum) = by(df, grpcol, x -> DataFrame(value = f(x[:value])))
 
 function grpprop(numframe_sub, denomframe_sub, grpcol, agemean)
+	sort!(numframe_sub, cols = [grpcol])
+	sort!(denomframe_sub, cols = [grpcol])
 	if agemean
 		propfr_agesp = DataFrame()
 		propfr_agesp[grpcol] = numframe_sub[grpcol]
@@ -153,7 +155,8 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 	agealias = ages[:alias]
 	agelist = ages[:agelist]
 	figtitle = "Döda $(pframes[:ca1alias])/$(pframes[:ca2alias]) $ctryalias"
-	p = bp.figure(title = figtitle, y_axis_label = agealias)
+	p = bp.figure(title = figtitle, y_axis_label = agealias,
+		plot_width = 600, plot_height = 600)
 	for sex in sexes
 		sexalias = conf["sexes"][string(sex)]["alias"][language]
 		col = conf["sexes"][string(sex)]["color"]
@@ -177,7 +180,8 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 	sexalias = conf["sexes"][string(sex)]["alias"][language]
 	figtitle = "Döda $(pframes[:ca1alias])/$(pframes[:ca2alias]) $sexalias $ctryalias"
 	p = bp.figure(title = figtitle, y_axis_type = y_axis_type,
-		toolbar_location = "below", toolbar_sticky = false)
+		toolbar_location = "below", toolbar_sticky = false,
+		plot_width = 600, plot_height = 600)
 	agelegends = []
 	for agetuple in agetuples
 		ages = ageslice(agetuple[1], agetuple[2], agemean, language)
@@ -190,6 +194,42 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 	end
 	legend = bo.models[:Legend](items = agelegends, location = (0, -30))
 	p[:add_layout](legend, "right")
+	if showplot
+		bp.show(p)
+	else
+		bp.save(p)
+	end
+end
+
+function propscat_yrsctry(ca1, ca2, sex, countries, sage, eage, year1, year2, agemean,
+	framedict, language, outfile, showplot)
+	bp.reset_output()
+	bp.output_file(outfile)
+	pframes = propplotframes(ca1, ca2, framedict, language)
+	ages = ageslice(sage, eage, agemean, language)
+	agealias = ages[:alias]
+	agelist = ages[:agelist]
+	sexalias =  conf["sexes"][string(sex)]["alias"][language]
+	figtitle = "Döda $(pframes[:ca1alias])/$(pframes[:ca2alias])\n$agealias $sexalias"
+	yr1propframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], sex,
+		countries, agelist, year1, agemean, :Country)
+	yr2propframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], sex,
+		countries, agelist, year2, agemean, :Country)
+	isos = map((c)->conf["countries"][string(c)]["iso3166"], yr1propframe[:Country])
+	ctrynames = map((c)->conf["countries"][string(c)]["alias"][language], yr2propframe[:Country])
+	scatdata = bo.models[:ColumnDataSource](data = Dict("year1prop" => yr1propframe[:value], 
+		"year2prop" => yr2propframe[:value], "isos" => isos, "ctrynames" => ctrynames))
+	hover = bo.models[:HoverTool](tooltips =
+			[("befolkning", "@ctrynames"),
+			("$year1", "@year1prop"), 
+			("$year2", "@year2prop")]) 
+	p = bp.figure(title = figtitle, x_axis_label = "$year1",
+		y_axis_label = "$year2", plot_width = 600, plot_height = 600)
+	p[:add_tools](hover)
+	p[:circle](x = "year1prop", y = "year2prop", size = 12, source = scatdata)
+	isolabels = bo.models[:LabelSet](x = "year1prop", y = "year2prop", text = "isos",
+		level = "glyph", x_offset = 5, y_offset = 5, source = scatdata)
+	p[:add_layout](isolabels)
 	if showplot
 		bp.show(p)
 	else
@@ -221,7 +261,7 @@ function propscat_sexesctry(ca1, ca2, countries, sage, eage, year, agemean,
 			("$femalias", "@femprop"), 
 			("$malealias", "@maleprop")])
 	p = bp.figure(title = figtitle, x_axis_label = femalias,
-		y_axis_label = malealias)
+		y_axis_label = malealias, plot_width = 600, plot_height = 600)
 	p[:add_tools](hover)
 	p[:circle](x = "femprop", y = "maleprop", size = 12, source = scatdata)
 	isolabels = bo.models[:LabelSet](x = "femprop", y = "maleprop", text = "isos",
