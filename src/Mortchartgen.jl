@@ -445,7 +445,7 @@ function batchplot(framedict, language, plottype, causes = keys(conf["causes"]),
 end
 
 function writeplotlist(batchplotdict, outfile)
-	tpl = readstring(normpath(datapath, "plotlist.tpl"))
+	tpl = readstring(normpath(datapath, "plotlist.mustache"))
 	write(outfile, render(tpl, batchplotdict))
 end
 
