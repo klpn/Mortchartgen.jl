@@ -8,6 +8,7 @@ using DataFrames, DataStructures, JSON, Mustache, MySQL, PyCall
 datapath = normpath(Pkg.dir(), "Mortchartgen", "data")
 sitepath = normpath(Pkg.dir(), "Mortchartgen", "mortchart-site")
 chartpath = normpath(sitepath, "charts")
+haktemplpath = normpath(sitepath, "templates")
 mkpath(chartpath)
 conf = JSON.parsefile(normpath(datapath, "chartgen.json"),
 	dicttype=DataStructures.OrderedDict)
@@ -310,7 +311,7 @@ Dict("alias" => *(ageslice(sage, eage, agemean, language)[:alias],
 	"fname" => fname)
 
 cadict(cause, children, language) = Dict("alias" => ucfirst(caalias(cause, language)),
-"children" => children)
+"children" => children, "name" => cause)
 
 function ctryints_flt(countries, year1, year2)
 	countries_flt = filter((ctry)->conf["countries"][ctry]["startyear"]<=year1
@@ -427,8 +428,8 @@ function childplot(framedict, language, plottype, ca1, countries, years, yrtups)
 	childdicts
 end
 
-function batchplot(framedict, language, plottype, causes = keys(conf["causes"]),
-	countries = keys(conf["countries"]), years = conf["batchsexesyrs"],
+function batchplot(framedict, language, plottype, causes = collect(keys(conf["causes"])),
+	countries = collect(keys(conf["countries"])), years = conf["batchsexesyrs"],
 	yrtups = conf["batchyrtups"])
 	sort!(causes, by=casorttup)
 	cadicts = []
@@ -436,17 +437,47 @@ function batchplot(framedict, language, plottype, causes = keys(conf["causes"]),
 		causes = filter((ca)->conf["causes"][ca]["sex"]==[2;1], causes)
 	end
 	for ca1 in causes
+		print("$ca1\n")
 		children = childplot(framedict, language, plottype, ca1,
 			countries, years, yrtups)
 		cadicts = vcat(cadicts, cadict(ca1, children, language))
 	end
-	Dict("alias" => conf["plottypes"][plottype]["alias"][language],
-		"cadicts" => cadicts)
+	Dict(
+		"plottype" => plottype,
+		"cadicts" => cadicts
+	)
 end
 
 function writeplotlist(batchplotdict, outfile)
 	tpl = readstring(normpath(datapath, "plotlist.mustache"))
 	write(outfile, render(tpl, batchplotdict))
+end
+
+function ccflt(causeclass, language)
+	cavals = filter((c)->c["causeclass"]==causeclass, collect(values(conf["causes"])))
+	cadicts = map((c)->Dict("alias" => ucfirst(c["alias"][language]), 
+		"classtot" => c["classtot"], "codedesc" => c["codedesc"][language],
+		"note" => c["note"][language]), cavals)
+	sort!(cadicts, by=((c)->(!(c["classtot"]), c["alias"])))
+end
+
+function writetempl(language, fname)
+	tpl = readstring(normpath(datapath, "$fname.mustache"))
+	if fname == "default"
+		maintempldicts = map((p)->
+			Dict("plottype" => p, "alias" => conf["plottypes"][p]["alias"][language]),
+			keys(conf["plottypes"]))
+		outpath = haktemplpath
+		ext = "html"
+	elseif fname == "mortchartdoc"
+		maintempldicts = map((cc)->
+			Dict("class" => cc, "alias" => conf["causeclasses"][cc]["alias"][language],
+			"causes" => ccflt(parse(cc), language)),
+			keys(conf["causeclasses"]))
+		outpath = sitepath
+		ext = "md"
+	end
+	write(normpath(outpath, "$fname.$ext"), render(tpl, maintempldicts = maintempldicts))
 end
 
 end # module

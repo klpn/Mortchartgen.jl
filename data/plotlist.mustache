@@ -1,8 +1,7 @@
----
-title: {{alias}}
-...
+<ul>{{#cadicts}}
+<li><a href="#{{name}}">{{alias}}</a>{{/cadicts}}</ul>
 {{#cadicts}}
-## {{alias}}
+<h2 id="{{name}}">{{alias}}</h2>
 <table>
 {{#children}}
 <tr>
@@ -10,8 +9,8 @@ title: {{alias}}
 {{alias}}
 </th>
 <td>
-{{#ages}}
-* [{{alias}}](charts/{{fname}}){{/ages}}
+<ul>{{#ages}}
+<li> <a href="/charts/{{fname}}">{{alias}}</a></li>{{/ages}}</ul>
 </td>
 </tr>
 {{/children}}
