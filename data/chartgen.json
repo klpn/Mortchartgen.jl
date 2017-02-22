@@ -1,7 +1,7 @@
 {
     "causeclasses": {
         "0": {
-            "alias": {"sv": "Totalt"},
+            "alias": {"sv": "Alla orsaker"},
             "makedoc": false,
             "makegroup": false
         },
@@ -49,7 +49,7 @@
     ],
     "causes": {
         "all": {
-            "alias": {"sv": "totalt"},
+            "alias": {"sv": "alla orsaker"},
             "causeclass": 0,
             "causeexpr": {
                 "07A": "A000",
@@ -864,5 +864,10 @@
 	    [1982,1992],
 	    [1992,2002],
 	    [2002,2012]
-    ]
+    ],
+    "plottypes": {
+	    "sexesyrs": {"alias": {"sv": "Tidstrender i befolkningar"}},
+	    "yrsctry": {"alias": {"sv": "Jämförelse av år"}},
+	    "sexesctry": {"alias": {"sv": "Jämförelse av kön per år"}}
+    }
 }

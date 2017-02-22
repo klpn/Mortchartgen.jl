@@ -1,6 +1,6 @@
 module Mortchartgen
 
-using DataFrames, DataStructures, JSON, MySQL, PyCall
+using DataFrames, DataStructures, JSON, Mustache, MySQL, PyCall
 @pyimport bokeh as bo
 @pyimport bokeh.plotting as bp
 @pyimport bokeh.palettes as bpal
@@ -15,6 +15,14 @@ tables = Dict(:deaths => "Deaths", :pop => "Pop")
 dfarrmatch(col, arr) = map((x) -> in(x, arr), Vector(col))
 ctrycodes = map((x)->parse(x), collect(keys(conf["countries"])))
 perc_round(value) = replace("$(round(value, 4))", ".", ",")
+
+function caalias(cause, language)
+	if cause=="pop"
+		return conf["pop"]["alias"][language]
+	else
+		return conf["causes"][cause]["alias"][language]
+	end
+end
 
 function cgen_frames(causes = keys(conf["causes"]))
 	conn_config = conf["settings"]["conn_config"]
@@ -90,22 +98,22 @@ end
 subframe_sray(df, sex, countries, agelist, years) = df[((df[:Sex].==sex)
 	& (dfarrmatch(df[:Country], countries)) & (dfarrmatch(df[:variable], agelist))
 	& (dfarrmatch(df[:Year], years))), :]
-dfgrp(df, grpcol, f = sum) = by(df, grpcol, x -> DataFrame(value = f(x[:value])))
+dfgrp_agemean(df, grpcol, f = mean) = by(df, grpcol, x -> DataFrame(value = f(x[:value])))
+dfgrp_sum(df, grpcol, f = sum) = by(df, grpcol,
+x -> DataFrame(value = f(x[:value]), value_1 = f(x[:value_1])))
 
 function grpprop(numframe_sub, denomframe_sub, grpcol, agemean)
-	sort!(numframe_sub, cols = [grpcol])
-	sort!(denomframe_sub, cols = [grpcol])
+	numdenomframe_sub = join(numframe_sub, denomframe_sub, on = grpcol)
 	if agemean
 		propfr_agesp = DataFrame()
-		propfr_agesp[grpcol] = numframe_sub[grpcol]
-		propfr_agesp[:value] = numframe_sub[:value]./denomframe_sub[:value]
-		return dfgrp(propfr_agesp, grpcol, mean)
+		propfr_agesp[grpcol] = numdenomframe_sub[grpcol]
+		propfr_agesp[:value] = numdenomframe_sub[:value]./numdenomframe_sub[:value_1]
+		return dfgrp_agemean(propfr_agesp, grpcol)
 	else
-		numgrp = dfgrp(numframe_sub, grpcol)
-		denomgrp = dfgrp(denomframe_sub, grpcol)
+		numdenomgrp = dfgrp_sum(numdenomframe_sub, grpcol)
 		propfr_agegr = DataFrame()
-		propfr_agegr[grpcol] = numgrp[grpcol]
-		propfr_agegr[:value] = numgrp[:value]./denomgrp[:value]
+		propfr_agegr[grpcol] = numdenomgrp[grpcol]
+		propfr_agegr[:value] = numdenomgrp[:value]./numdenomgrp[:value_1]
 		return propfr_agegr
 	end
 end
@@ -134,14 +142,12 @@ end
 function propplotframes(ca1, ca2, framedict, language)
 	deaths = framedict[:deaths]
 	ca1frame = deaths[deaths[:Cause].==ca1, :]
-	ca1alias = conf["causes"][ca1]["alias"][language]
+	ca1alias = caalias(ca1, language) 
+	ca2alias = caalias(ca2, language) 
 	if ca2=="pop"
 		ca2frame = framedict[:pop]
-		ca2alias = conf["pop"]["alias"][language]
-		
 	else
 		ca2frame = deaths[deaths[:Cause].==ca2, :]
-		ca2alias = conf["causes"][ca2]["alias"][language]
 	end
 	Dict(:ca1frame => ca1frame, :ca1alias => ca1alias,
 		:ca2frame => ca2frame, :ca2alias => ca2alias)
@@ -217,10 +223,11 @@ function propscat_yrsctry(ca1, ca2, sex, countries, sage, eage, year1, year2, ag
 		countries, agelist, year1, agemean, :Country)
 	yr2propframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], sex,
 		countries, agelist, year2, agemean, :Country)
-	isos = map((c)->conf["countries"][string(c)]["iso3166"], yr1propframe[:Country])
-	ctrynames = map((c)->conf["countries"][string(c)]["alias"][language], yr2propframe[:Country])
-	scatdata = bo.models[:ColumnDataSource](data = Dict("year1prop" => yr1propframe[:value], 
-		"year2prop" => yr2propframe[:value], "isos" => isos, "ctrynames" => ctrynames))
+	yr12propframe = join(yr1propframe, yr2propframe, on=:Country)
+	isos = map((c)->conf["countries"][string(c)]["iso3166"], yr12propframe[:Country])
+	ctrynames = map((c)->conf["countries"][string(c)]["alias"][language], yr12propframe[:Country])
+	scatdata = bo.models[:ColumnDataSource](data = Dict("year1prop" => yr12propframe[:value], 
+		"year2prop" => yr12propframe[:value_1], "isos" => isos, "ctrynames" => ctrynames))
 	hover = bo.models[:HoverTool](tooltips =
 			[("befolkning", "@ctrynames"),
 			("$year1", "@year1prop"), 
@@ -277,97 +284,169 @@ function propscat_sexesctry(ca1, ca2, countries, sage, eage, year, agemean,
 end
 
 batchages_caflt(cause) = filter((age)-> 
-	(age["startage"]==1 && age["endage"]==1) ||
+	age["ca2"]!=cause &&
+	((age["startage"]==1 && age["endage"]==1) ||
 	(!(haskey(conf["causes"][cause], "lowerage")) ||
 	age["endage"]>=conf["causes"][cause]["lowerage"]) && 
 	(!(haskey(conf["causes"][cause], "upperage")) ||
-	age["startage"]<=conf["causes"][cause]["upperage"]),
+	age["startage"]<=conf["causes"][cause]["upperage"])),
 	conf["batchages"])
 
-function batchplot_sexesyrs(framedict, language, causes = keys(conf["causes"]),
-	countries = keys(conf["countries"]))
-	for ca1 in causes
-		sexes = conf["causes"][ca1]["sex"]
+casorttup(cause) =
+(conf["causes"][cause]["causeclass"], !(conf["causes"][cause]["classtot"]))
+
+fname_sexesyrs(ca1, ca2, country, sage, eage, agemean) = 
+*(ca1, ca2, country, "s", string(sage), "e", string(eage),
+"mean", string(agemean), ".html")
+
+agedict_bothsexes(sage, eage, agemean, language, ca2, fname) =
+Dict("alias" => *(ageslice(sage, eage, agemean, language)[:alias],
+	"/$(caalias(ca2, language))"),
+	"fname" => fname)
+agedict_sex(sage, eage, sex, agemean, language, ca2, fname) =
+Dict("alias" => *(ageslice(sage, eage, agemean, language)[:alias],
+	"/$(caalias(ca2, language)) ",
+	conf["sexes"][string(sex)]["alias"][language]),
+	"fname" => fname)
+
+cadict(cause, children, language) = Dict("alias" => ucfirst(caalias(cause, language)),
+"children" => children)
+
+function ctryints_flt(countries, year1, year2)
+	countries_flt = filter((ctry)->conf["countries"][ctry]["startyear"]<=year1
+				&& conf["countries"][ctry]["endyear"]>=year2, countries)
+	map((c)->parse(c), countries_flt)
+end
+
+fname_yrsctry(ca1, ca2, sex, sage, eage, agemean, year1, year2) = 
+ *(ca1, ca2, string(sex), "s", string(sage), "e", string(eage),
+"mean", string(agemean), "ctries", string(year1), "vs", string(year2), ".html")
+
+causes_flt_skipyrs(causes, year1, year2) =
+filter((ca)-> !(haskey(conf["causes"][ca], "skipyrs")) || 
+(!(year1 in conf["causes"][ca]["skipyrs"]) &&
+!(year2 in conf["causes"][ca]["skipyrs"])),
+causes)
+
+fname_sexesctry(ca1, ca2, sage, eage, agemean, year) =
+*(ca1, ca2, "s", string(sage), "e", string(eage), "mean", string(agemean),
+"sexesctries", string(year), ".html")
+
+function agebatchplot(framedict, age, plottype, language, ca1, child, countries, yr1, yr2, sexes)
+	ca2 = age["ca2"]
+	sage = age["startage"]
+	eage = age["endage"]
+	agemean = age["agemean"]
+	if plottype == "sexesyrs"
+		fname = fname_sexesyrs(ca1, ca2, child, sage, eage, agemean)
+		outfile = normpath(chartpath, fname)
+		propplot_sexesyrs(ca1, ca2, sexes, parse(child), 
+			sage, eage, yr1:yr2,
+			agemean, framedict, language, outfile, false)
+		return agedict_bothsexes(sage, eage, agemean, language, ca2, fname)
+	elseif plottype == "yrsctry"
+		if ca1 in causes_flt_skipyrs(keys(conf["causes"]), yr1, yr2)
+			agesexdicts = []
+			ctryints = ctryints_flt(countries, yr1, yr2)
+			for sex in sexes
+				fname = fname_yrsctry(ca1, ca2, sex, sage, eage,
+					agemean, yr1, yr2)
+				outfile = normpath(chartpath, fname)
+				propscat_yrsctry(ca1, ca2, sex, ctryints,
+					sage, eage, yr1, yr2,
+					agemean, framedict, language, outfile, false)
+				agesexdict = agedict_sex(sage, eage, sex,
+					agemean, language, ca2, fname)
+				agesexdicts = vcat(agesexdicts, agesexdict)
+			end
+			return agesexdicts
+		end
+	elseif plottype == "sexesctry"
+		if (ca1 in causes_flt_skipyrs(keys(conf["causes"]), yr1, yr2) &&
+			conf["causes"][ca1]["sex"]==[2;1])
+			ctryints = ctryints_flt(countries, yr1, yr2)
+			year = yr1
+			fname = fname_sexesctry(ca1, ca2, sage, eage, agemean, year)
+			outfile = normpath(chartpath, fname)
+			propscat_sexesctry(ca1, ca2, ctryints,
+				sage, eage, year, agemean,
+				framedict, language, outfile, false)
+			return agedict_bothsexes(sage, eage, agemean, language, ca2, fname)
+		end
+	end
+end
+
+function batchplotalias(child, plottype, language)
+	if plottype == "sexesyrs"
+		return conf["countries"][child]["alias"][language]
+	elseif plottype == "yrsctry"
+		return "$(child[1]) vs $(child[2])"
+	elseif plottype == "sexesctry"
+		return "$child"
+	end
+end
+
+function batchplotyrs(child, plottype)
+	if plottype == "sexesyrs"
+		return [conf["countries"][child]["startyear"];
+			conf["countries"][child]["endyear"]]
+	elseif plottype == "yrsctry"
+		return child
+	elseif plottype == "sexesctry"
+		return [child; child]
+	end
+end
+
+function childplot(framedict, language, plottype, ca1, countries, years, yrtups)
+	ages = batchages_caflt(ca1)
+	sexes = conf["causes"][ca1]["sex"]
+	childdicts = []
+	if plottype == "sexesyrs"
+		children = countries
+	elseif plottype == "yrsctry"
+		children = yrtups
+	elseif plottype == "sexesctry"
+		children = years
+	end
+	for child in children
+		agedicts = []
 		ages = batchages_caflt(ca1)
-		for country in countries
-			syr = conf["countries"][country]["startyear"]
-			eyr = conf["countries"][country]["endyear"]
-			for age in ages
-				ca2 = age["ca2"]
-				sage = age["startage"]
-				eage = age["endage"]
-				agemean = age["agemean"]
-				outfile = normpath(chartpath, *(ca1, ca2, country,
-					"s", string(sage), "e", string(eage),
-					"mean", string(agemean), ".html"))
-				propplot_sexesyrs(ca1, ca2, sexes, parse(country), 
-					sage, eage, syr:eyr,
-					agemean, framedict, language, outfile, false) 
-			end
+		yrs = batchplotyrs(child, plottype) 
+		for age in ages
+			agedict = agebatchplot(framedict, age, plottype, language, ca1, child,
+				countries, yrs[1], yrs[2], sexes)
+			agedicts = vcat(agedicts, agedict)
+		end
+		if !(agedicts[1]==nothing)
+			childdict = Dict(
+				"alias" => batchplotalias(child, plottype, language),
+				"ages" => agedicts)
+			childdicts = vcat(childdicts, childdict)
 		end
 	end
+	childdicts
 end
 
-function batchscat_yrsctry(framedict, language, causes = keys(conf["causes"]),
-	countries = keys(conf["countries"]), yrtups = conf["batchyrtups"])
-	for yrtup in yrtups
-		year1 = yrtup[1]
-		year2 = yrtup[2]
-		causes_flt = filter((ca)->
-			!(haskey(conf["causes"], "skipyrs")) || 
-			!(year1 in conf["causes"][ca]["skipyrs"] ||
-			(year2 in conf["causes"][ca]["skipyrs"])),
-			causes)
-		countries_flt = filter((ctry)->conf["countries"][ctry]["startyear"]<=year1
-			&& conf["countries"][ctry]["endyear"]>=year2, countries)
-		ctryints = map((c)->parse(c), countries_flt)
-		for ca1 in causes_flt
-			ages = batchages_caflt(ca1)
-			for age in ages
-				ca2 = age["ca2"]
-				sage = age["startage"]
-				eage = age["endage"]
-				agemean = age["agemean"]
-				for sex in conf["causes"][ca1]["sex"]
-					outfile = normpath(chartpath, *(ca1, ca2, string(sex),
-					"s", string(sage), "e", string(eage),
-					"mean", string(agemean), "ctries",
-					string(year1), "vs", string(year2), ".html"))
-					propscat_yrsctry(ca1, ca2, sex, ctryints,
-					sage, eage, year1, year2,
-					agemean, framedict, language, outfile, false)
-				end
-			end
-		end
+function batchplot(framedict, language, plottype, causes = keys(conf["causes"]),
+	countries = keys(conf["countries"]), years = conf["batchsexesyrs"],
+	yrtups = conf["batchyrtups"])
+	sort!(causes, by=casorttup)
+	cadicts = []
+	if plottype == "sexesctry"
+		causes = filter((ca)->conf["causes"][ca]["sex"]==[2;1], causes)
 	end
+	for ca1 in causes
+		children = childplot(framedict, language, plottype, ca1,
+			countries, years, yrtups)
+		cadicts = vcat(cadicts, cadict(ca1, children, language))
+	end
+	Dict("alias" => conf["plottypes"][plottype]["alias"][language],
+		"cadicts" => cadicts)
 end
 
-function batchscat_sexesctry(framedict, language, causes = keys(conf["causes"]),
-	countries = keys(conf["countries"]), years = conf["batchsexesyrs"])
-	for year in years
-		causes_flt = filter((ca)->conf["causes"][ca]["sex"]==[2;1] &&
-			(!(haskey(conf["causes"], "skipyrs")) || 
-			!(year in conf["causes"][ca]["skipyrs"])),
-			causes)
-		countries_flt = filter((ctry)->conf["countries"][ctry]["startyear"]<=year
-			&& conf["countries"][ctry]["endyear"]>=year, countries)
-		ctryints = map((c)->parse(c), countries_flt)
-		for ca1 in causes_flt
-			ages = batchages_caflt(ca1)
-			for age in ages
-				ca2 = age["ca2"]
-				sage = age["startage"]
-				eage = age["endage"]
-				agemean = age["agemean"]
-				outfile = normpath(chartpath, *(ca1, ca2,
-					"s", string(sage), "e", string(eage),
-					"mean", string(agemean), "sexesctries", string(year), ".html"))
-				propscat_sexesctry(ca1, ca2, ctryints,
-					sage, eage, year,
-					agemean, framedict, language, outfile, false)
-			end
-		end
-	end
+function writeplotlist(batchplotdict, outfile)
+	tpl = readstring(normpath(datapath, "plotlist.tpl"))
+	write(outfile, render(tpl, batchplotdict))
 end
 
 end # module
