@@ -11,9 +11,7 @@ pandocWriterOptions :: WriterOptions
 pandocWriterOptions = defaultHakyllWriterOptions 
                       { writerHTMLMathMethod = MathJax ""  
                         , writerTableOfContents = True 
-                        , writerHtmlQTags = True 
-                        , writerStandalone = True 
-                        , writerTemplate = unlines[ "$toc$", "$body$" ] }
+                        , writerHtmlQTags = True }
 
 --------------------------------------------------------------------------------
 
@@ -45,16 +43,26 @@ main = hakyll $ do
                 >>= loadAndApplyTemplate "templates/default.html" indexCtx
                 >>= relativizeUrls
 
+{{#:maintempldicts}}
+    match "{{plottype}}.html" $ do
+        route idRoute
+        compile $ do
+            let plotlistCtx =
+                    constField "title" "{{alias}}"                `mappend`
+                    defaultContext
+
+            getResourceBody
+                >>= applyAsTemplate plotlistCtx
+                >>= loadAndApplyTemplate "templates/default.html" plotlistCtx
+                >>= relativizeUrls
+{{/:maintempldicts}}
+
     match "templates/*" $ compile templateCompiler
     match "*.bib" $ compile biblioCompiler
     match "*.csl" $ compile cslCompiler
 
 
 --------------------------------------------------------------------------------
-postCtx :: Context String
-postCtx =
-    dateField "date" "%B %e, %Y" `mappend`
-    defaultContext
 
 bibtexCompiler :: Compiler (Item String)
 bibtexCompiler = do 

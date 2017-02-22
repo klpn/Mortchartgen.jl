@@ -224,11 +224,11 @@ function propscat_yrsctry(ca1, ca2, sex, countries, sage, eage, year1, year2, ag
 		countries, agelist, year1, agemean, :Country)
 	yr2propframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], sex,
 		countries, agelist, year2, agemean, :Country)
-	yr12propframe = join(yr1propframe, yr2propframe, on=:Country)
-	isos = map((c)->conf["countries"][string(c)]["iso3166"], yr12propframe[:Country])
-	ctrynames = map((c)->conf["countries"][string(c)]["alias"][language], yr12propframe[:Country])
-	scatdata = bo.models[:ColumnDataSource](data = Dict("year1prop" => yr12propframe[:value], 
-		"year2prop" => yr12propframe[:value_1], "isos" => isos, "ctrynames" => ctrynames))
+	propframe = join(yr1propframe, yr2propframe, on=:Country)
+	isos = map((c)->conf["countries"][string(c)]["iso3166"], propframe[:Country])
+	ctrynames = map((c)->conf["countries"][string(c)]["alias"][language], propframe[:Country])
+	scatdata = bo.models[:ColumnDataSource](data = Dict("year1prop" => propframe[:value], 
+		"year2prop" => propframe[:value_1], "isos" => isos, "ctrynames" => ctrynames))
 	hover = bo.models[:HoverTool](tooltips =
 			[("befolkning", "@ctrynames"),
 			("$year1", "@year1prop"), 
@@ -260,12 +260,13 @@ function propscat_sexesctry(ca1, ca2, countries, sage, eage, year, agemean,
 		countries, agelist, year, agemean, :Country)
 	malepropframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], 1,
 		countries, agelist, year, agemean, :Country)
+	propframe = join(fempropframe, malepropframe, on=:Country)
 	femalias =  conf["sexes"]["2"]["alias"][language]
 	malealias = conf["sexes"]["1"]["alias"][language]
-	isos = map((c)->conf["countries"][string(c)]["iso3166"], fempropframe[:Country])
-	ctrynames = map((c)->conf["countries"][string(c)]["alias"][language], fempropframe[:Country])
-	scatdata = bo.models[:ColumnDataSource](data = Dict("femprop" => fempropframe[:value], 
-		"maleprop" => malepropframe[:value], "isos" => isos, "ctrynames" => ctrynames))
+	isos = map((c)->conf["countries"][string(c)]["iso3166"], propframe[:Country])
+	ctrynames = map((c)->conf["countries"][string(c)]["alias"][language], propframe[:Country])
+	scatdata = bo.models[:ColumnDataSource](data = Dict("femprop" => propframe[:value], 
+		"maleprop" => propframe[:value_1], "isos" => isos, "ctrynames" => ctrynames))
 	hover = bo.models[:HoverTool](tooltips =
 			[("befolkning", "@ctrynames"),
 			("$femalias", "@femprop"), 
@@ -292,9 +293,6 @@ batchages_caflt(cause) = filter((age)->
 	(!(haskey(conf["causes"][cause], "upperage")) ||
 	age["startage"]<=conf["causes"][cause]["upperage"])),
 	conf["batchages"])
-
-casorttup(cause) =
-(conf["causes"][cause]["causeclass"], !(conf["causes"][cause]["classtot"]))
 
 fname_sexesyrs(ca1, ca2, country, sage, eage, agemean) = 
 *(ca1, ca2, country, "s", string(sage), "e", string(eage),
@@ -410,6 +408,7 @@ function childplot(framedict, language, plottype, ca1, countries, years, yrtups)
 		children = years
 	end
 	for child in children
+		print("$child\n")
 		agedicts = []
 		ages = batchages_caflt(ca1)
 		yrs = batchplotyrs(child, plottype) 
@@ -431,13 +430,17 @@ end
 function batchplot(framedict, language, plottype, causes = collect(keys(conf["causes"])),
 	countries = collect(keys(conf["countries"])), years = conf["batchsexesyrs"],
 	yrtups = conf["batchyrtups"])
-	sort!(causes, by=casorttup)
+	sort!(causes, by=((c)->
+		(conf["causes"][c]["causeclass"],
+		!(conf["causes"][c]["classtot"]),
+		conf["causes"][c]["alias"][language])))
+	sort!(countries, by=((c)->conf["countries"][c]["alias"][language]))
 	cadicts = []
 	if plottype == "sexesctry"
 		causes = filter((ca)->conf["causes"][ca]["sex"]==[2;1], causes)
 	end
 	for ca1 in causes
-		print("$ca1\n")
+		print("$plottype, $ca1\n")
 		children = childplot(framedict, language, plottype, ca1,
 			countries, years, yrtups)
 		cadicts = vcat(cadicts, cadict(ca1, children, language))
@@ -463,12 +466,17 @@ end
 
 function writetempl(language, fname)
 	tpl = readstring(normpath(datapath, "$fname.mustache"))
-	if fname == "default"
+	if (fname == "default" || fname == "site")
 		maintempldicts = map((p)->
 			Dict("plottype" => p, "alias" => conf["plottypes"][p]["alias"][language]),
 			keys(conf["plottypes"]))
-		outpath = haktemplpath
-		ext = "html"
+		if fname == "default"
+			outpath = haktemplpath
+			ext = "html"
+		elseif fname == "site"
+			outpath = sitepath
+			ext = "hs"
+		end
 	elseif fname == "mortchartdoc"
 		maintempldicts = map((cc)->
 			Dict("class" => cc, "alias" => conf["causeclasses"][cc]["alias"][language],
@@ -478,6 +486,16 @@ function writetempl(language, fname)
 		ext = "md"
 	end
 	write(normpath(outpath, "$fname.$ext"), render(tpl, maintempldicts = maintempldicts))
+end
+
+function writeplotsite(framedict, language)
+	for plottype in keys(conf["plottypes"])
+		batchplotdict = batchplot(framedict, language, plottype)
+		writeplotlist(batchplotdict, normpath(sitepath, "$plottype.html"))
+	end
+	for fname in ["default"; "site"; "mortchartdoc"]
+		writetempl(language, fname)
+	end
 end
 
 end # module
