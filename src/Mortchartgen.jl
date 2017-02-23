@@ -198,6 +198,7 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 		minvals = vcat(minvals, minimum(propframe[:value]))
 	end
 	p[:add_layout](listlabels(country, years, minvals, framedict))
+	p[:add_tools](bo.models[:CrosshairTool]())
 	if showplot
 		bp.show(p)
 	else
