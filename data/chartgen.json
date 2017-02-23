@@ -808,7 +808,7 @@
         },
         "1": {
             "alias": {"sv": "män"},
-	    "color": "red"
+	    "color": "green"
         },
         "2": {
             "alias": {"sv": "kvinnor"},

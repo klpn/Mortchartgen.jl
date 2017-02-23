@@ -1,6 +1,6 @@
 module Mortchartgen
 
-using DataFrames, DataStructures, JSON, Mustache, MySQL, PyCall
+using DataFrames, DataStructures, JSON, Loess, Mustache, MySQL, PyCall
 @pyimport bokeh as bo
 @pyimport bokeh.plotting as bp
 @pyimport bokeh.palettes as bpal
@@ -103,6 +103,15 @@ dfgrp_agemean(df, grpcol, f = mean) = by(df, grpcol, x -> DataFrame(value = f(x[
 dfgrp_sum(df, grpcol, f = sum) = by(df, grpcol,
 x -> DataFrame(value = f(x[:value]), value_1 = f(x[:value_1])))
 
+function listchanges(country, years, framedict) 
+	countryframe = subframe_sray(framedict[:deaths], 2, country, [:Age1], years)
+	listframe = countryframe[countryframe[:Cause].=="all", [:Year; :List]]
+	nrows = size(listframe)[1]
+	lcomp = DataFrame(Year = listframe[:Year][2:nrows],
+		List = listframe[:List][2:nrows], Listprev = listframe[:List][1:nrows-1])
+	lcomp[lcomp[:List].!=lcomp[:Listprev], :]
+end
+
 function grpprop(numframe_sub, denomframe_sub, grpcol, agemean)
 	numdenomframe_sub = join(numframe_sub, denomframe_sub, on = grpcol)
 	if agemean
@@ -154,6 +163,15 @@ function propplotframes(ca1, ca2, framedict, language)
 		:ca2frame => ca2frame, :ca2alias => ca2alias)
 end
 
+function listlabels(country, years, minvals, framedict)
+	lch = listchanges(country, years, framedict)
+	lchdata = bo.models[:ColumnDataSource](data = Dict("year" => lch[:Year],
+		"list" => lch[:List]))
+	listlabels = bo.models[:LabelSet](x = "year", y = minimum(minvals), 
+		text = "list", text_color = "red", angle = pi/2, render_mode = "canvas", 
+		source = lchdata)
+end
+
 function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 	framedict, language, outfile, showplot)
 	bp.reset_output()
@@ -166,13 +184,20 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 	figtitle = "Döda $(pframes[:ca1alias])/$(pframes[:ca2alias]) $ctryalias"
 	p = bp.figure(title = figtitle, y_axis_label = agealias,
 		plot_width = 600, plot_height = 600)
+	minvals = []
 	for sex in sexes
 		sexalias = conf["sexes"][string(sex)]["alias"][language]
 		col = conf["sexes"][string(sex)]["color"]
 		propframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], 
 			sex, country, agelist, years, agemean, :Year)
-		p[:line](propframe[:Year], propframe[:value], legend = sexalias, color = col)
+		yrfloatarr = convert(Array{Float64}, propframe[:Year])
+		valarr = convert(Array, propframe[:value])
+		propsm = Loess.predict(loess(yrfloatarr, valarr), yrfloatarr)
+		p[:circle](propframe[:Year], propframe[:value], legend = sexalias, color = col)
+		p[:line](propframe[:Year], propsm, legend = "$sexalias loess", color = col)
+		minvals = vcat(minvals, minimum(propframe[:value]))
 	end
+	p[:add_layout](listlabels(country, years, minvals, framedict))
 	if showplot
 		bp.show(p)
 	else
@@ -192,6 +217,7 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 		toolbar_location = "below", toolbar_sticky = false,
 		plot_width = 600, plot_height = 600)
 	agelegends = []
+	minvals = []
 	for agetuple in agetuples
 		ages = ageslice(agetuple[1], agetuple[2], agemean, language)
 		agealias = ages[:alias]
@@ -200,9 +226,11 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 			sex, country, agelist, years, agemean, :Year)
 		ageline = p[:line](propframe[:Year], propframe[:value], color = ages[:color])
 		agelegends = vcat(agelegends, (agealias, [ageline]))
+		minvals = vcat(minvals, minimum(propframe[:value]))
 	end
 	legend = bo.models[:Legend](items = agelegends, location = (0, -30))
 	p[:add_layout](legend, "right")
+	p[:add_layout](listlabels(country, years, minvals, framedict))
 	if showplot
 		bp.show(p)
 	else
