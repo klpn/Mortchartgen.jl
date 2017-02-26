@@ -10,6 +10,7 @@ sitepath = normpath(Pkg.dir(), "Mortchartgen", "mortchart-site")
 chartpath = normpath(sitepath, "charts")
 haktemplpath = normpath(sitepath, "templates")
 mkpath(chartpath)
+mkpath(haktemplpath)
 conf = JSON.parsefile(normpath(datapath, "chartgen.json"),
 	dicttype=DataStructures.OrderedDict)
 tables = Dict(:deaths => "Deaths", :pop => "Pop")
