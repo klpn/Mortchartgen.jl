@@ -5,12 +5,10 @@ using DataFrames, DataStructures, JSON, Loess, Mustache, MySQL, PyCall
 @pyimport bokeh.plotting as bp
 @pyimport bokeh.palettes as bpal
 
-datapath = normpath(Pkg.dir(), "Mortchartgen", "data")
-sitepath = normpath(Pkg.dir(), "Mortchartgen", "mortchart-site")
-chartpath = normpath(sitepath, "charts")
-haktemplpath = normpath(sitepath, "templates")
+mainpath = normpath(Pkg.dir(), "Mortchartgen")
+datapath = normpath(mainpath, "data")
+chartpath =  normpath(mainpath, "charts")
 mkpath(chartpath)
-mkpath(haktemplpath)
 conf = JSON.parsefile(normpath(datapath, "chartgen.json"),
 	dicttype=DataStructures.OrderedDict)
 tables = Dict(:deaths => "Deaths", :pop => "Pop")
@@ -494,7 +492,9 @@ function ccflt(causeclass, language)
 	sort!(cadicts, by=((c)->(!(c["classtot"]), c["alias"])))
 end
 
-function writetempl(language, fname)
+function writetempl(language, fname, sitepath)
+	haktemplpath = normpath(sitepath, "templates")
+	mkpath(haktemplpath)
 	tpl = readstring(normpath(datapath, "$fname.mustache"))
 	if (fname == "default" || fname == "site")
 		maintempldicts = map((p)->
@@ -518,13 +518,35 @@ function writetempl(language, fname)
 	write(normpath(outpath, "$fname.$ext"), render(tpl, maintempldicts = maintempldicts))
 end
 
-function writeplotsite(framedict, language)
+function writeplotsite(framedict, language,
+	sitepath = normpath(mainpath, "mortchart-site"))
+	sitesubpaths = DataStructures.OrderedDict(
+		"siteroot" => Dict("path" => "", "files" => 
+			["default.csl"; "index.html"; "mortchartdoc_biber.bib"]),
+		"css" => Dict("path" => "css", "files" => ["default.css"]),
+		"images" => Dict("path" => "images", "files" => ["mortchartico.png"]),
+		"charts" => Dict("path" => "charts", "files" => []))
+	sitefullsubpaths = DataStructures.OrderedDict()
+	for subpath in keys(sitesubpaths)
+		sitefullsubpath = (normpath(sitepath, sitesubpaths[subpath]["path"]))
+		sitefullsubpaths[subpath] = sitefullsubpath
+		mkpath(sitefullsubpath)
+		for file in sitesubpaths[subpath]["files"]
+			cp(normpath(datapath, file), normpath(sitefullsubpath, file),
+				remove_destination = true)
+		end
+	end
 	for plottype in keys(conf["plottypes"])
 		batchplotdict = batchplot(framedict, language, plottype)
 		writeplotlist(batchplotdict, normpath(sitepath, "$plottype.html"))
 	end
+	chartdestpath = sitefullsubpaths["charts"]
+	for chartfile in readdir(chartpath)
+		mv(normpath(chartpath, chartfile), normpath(chartdestpath, chartfile),
+			remove_destination = true)
+	end
 	for fname in ["default"; "site"; "mortchartdoc"]
-		writetempl(language, fname)
+		writetempl(language, fname, sitepath)
 	end
 end
 
