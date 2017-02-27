@@ -554,15 +554,15 @@ function writeplotsite(framedict, language,
 				remove_destination = true)
 		end
 	end
-	#for plottype in keys(conf["plottypes"])
-	#	batchplotdict = batchplot(framedict, language, plottype)
-	#	writeplotlist(batchplotdict, normpath(sitepath, "$plottype.html"))
-	#end
-	#chartdestpath = sitefullsubpaths["charts"]
-	#for chartfile in readdir(chartpath)
-	#	mv(normpath(chartpath, chartfile), normpath(chartdestpath, chartfile),
-	#	remove_destination = true)
-	#end
+	for plottype in keys(conf["plottypes"])
+		batchplotdict = batchplot(framedict, language, plottype)
+		writeplotlist(batchplotdict, normpath(sitepath, "$plottype.html"))
+	end
+	chartdestpath = sitefullsubpaths["charts"]
+	for chartfile in readdir(chartpath)
+		mv(normpath(chartpath, chartfile), normpath(chartdestpath, chartfile),
+		remove_destination = true)
+	end
 	for fname in ["default"; "index"; "site"; "mortchartdoc"]
 		writetempl(language, fname, sitepath)
 	end
