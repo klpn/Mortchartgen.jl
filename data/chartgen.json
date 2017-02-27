@@ -56,8 +56,10 @@
     ],
     "causes": {
         "all": {
-            "alias": { "en": "all causes",
-		    "sv": "alla orsaker"},
+            "alias": { 
+		    "en": "all causes",
+		    "sv": "alla orsaker"
+	    },
             "causeclass": 0,
             "causeexpr": {
                 "07A": "A000",
@@ -67,15 +69,21 @@
                 "101": "1000"
             },
             "classtot": true,
-	    "codedesc": {"en": "ICD-6/7/8/9: 000--E999, ICD-10: A--Y",
-		    "sv": "ICD-6/7/8/9: 000--E999, ICD-10: A--Y"},
-            "note": {"en": "Includes all causes",
-		    "sv": "Inkluderar samtliga dödsorsaker."},
+	    "codedesc": {
+		    "en": "ICD-6/7/8/9: 000--E999, ICD-10: A--Y",
+		    "sv": "ICD-6/7/8/9: 000--E999, ICD-10: A--Y"
+	    },
+            "note": {
+		    "en": "Includes all causes",
+		    "sv": "Inkluderar samtliga dödsorsaker."
+	    },
             "sex": [2,1]
         },
         "bc": {
-            "alias": { "en": "breast cancer",
-		    "sv": "bröstcancer"},
+            "alias": {
+		    "en": "breast cancer",
+		    "sv": "bröstcancer"
+	    },
             "causeclass": 2,
             "causeexpr": {
                 "07A": "A051",
@@ -97,8 +105,10 @@
             "lowerage": 9
         },
         "cervc": {
-            "alias": { "en": "cervical cancer",
-		    "sv": "cervixcancer"},
+            "alias": { 
+		    "en": "cervical cancer",
+		    "sv": "cervixcancer"
+	    },
             "causeclass": 2,
             "causeexpr": {
                 "07A": "A052",
@@ -474,7 +484,10 @@
                 "101": "1034"
             },
             "classtot": false,
-            "codedesc": {"sv": "ICD-6/7: 162--163; ICD-8/9: 162; ICD-10: C33--C34"},
+            "codedesc": {
+		    "en": "ICD-6/7: 162--163; ICD-8/9: 162; ICD-10: C33--C34",
+		    "sv": "ICD-6/7: 162--163; ICD-8/9: 162; ICD-10: C33--C34"
+	    },
             "note": {
 		    "en": "Includes cancer in the lungs, bronchi and trachea.",
 		    "sv": "Inkluderar cancer i luftstrupe och bronk."
@@ -1298,8 +1311,47 @@
 		    }
 	    }
     },
-    "refhead" : {
+    "refhead": {
 	    "en": "References",
 	    "sv": "Referenser"
+    },
+    "dochead": {
+	    "en": "Documentation",
+	    "sv": "Dokumentation"
+    },
+    "homehead": {
+	    "en": "Home",
+	    "sv": "Hem"
+    },
+    "sitenavhead": {
+	    "en": "On this site",
+	    "sv": "Denna webbplats"
+    },
+    "blognavhead": {
+	    "en": "Blogs by me",
+	    "sv": "Bloggar av mig"
+    },
+    "othlanghead": {
+	    "en": "In other languages",
+	    "sv": "På andra språk"
+    },
+    "othlangs": {
+	   "en": [
+		   {
+			   "langurl": "http://mortchart.klpn.se",
+			   "langalias": "Swedish"
+		   }
+		 ]
+	   ,
+	  "sv": [
+		   {
+			   "langurl": "http://mortchart-en.klpn.se",
+			   "langalias": "Engelska"
+		   }
+		]
+    },
+    "sitehead": {
+	    "en": "Mortality Charts",
+	    "sv": "Mortalitetsdiagram"
     }
 }

@@ -505,6 +505,15 @@ function writetempl(language, fname, sitepath)
 		if fname == "default"
 			outpath = haktemplpath
 			ext = "html"
+			maintempl["language"] = language
+			for siteelem in ["dochead"; "homehead"; "sitehead";
+				"sitenavhead"; "blognavhead"; "othlanghead"]
+				maintempl[siteelem] = conf[siteelem][language]
+			end
+			maintempl["othlangs"] = map((od)->Dict(od),
+				conf["othlangs"][language])
+			maintempl["footer"] =
+				readstring(normpath(datapath, "footer-$language.$ext"))
 		elseif fname == "site"
 			outpath = sitepath
 			ext = "hs"
@@ -545,15 +554,15 @@ function writeplotsite(framedict, language,
 				remove_destination = true)
 		end
 	end
-	for plottype in keys(conf["plottypes"])
-		batchplotdict = batchplot(framedict, language, plottype)
-		writeplotlist(batchplotdict, normpath(sitepath, "$plottype.html"))
-	end
-	chartdestpath = sitefullsubpaths["charts"]
-	for chartfile in readdir(chartpath)
-		mv(normpath(chartpath, chartfile), normpath(chartdestpath, chartfile),
-		remove_destination = true)
-	end
+	#for plottype in keys(conf["plottypes"])
+	#	batchplotdict = batchplot(framedict, language, plottype)
+	#	writeplotlist(batchplotdict, normpath(sitepath, "$plottype.html"))
+	#end
+	#chartdestpath = sitefullsubpaths["charts"]
+	#for chartfile in readdir(chartpath)
+	#	mv(normpath(chartpath, chartfile), normpath(chartdestpath, chartfile),
+	#	remove_destination = true)
+	#end
 	for fname in ["default"; "index"; "site"; "mortchartdoc"]
 		writetempl(language, fname, sitepath)
 	end

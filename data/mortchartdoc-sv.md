@@ -39,8 +39,8 @@ används för att generera diagram och webbplats finns tillgängliga via
 *Dödstal* är ett grundläggande mått på dödlighet.
 Dödstalet i en orsak $c$ i en befolkning $x$ under en tidsperiod $t$,
 $m_{c,t}(x)$, beräknas enligt $m_{c,t}(x)=n_{c,t}(x)/p_t(x)$, där
-$n_{c,t}$ är antalet dödsfall i $c$ under $t$ och $p_t(x)$ är
-medelfolkmängden i $x$ under $t$. Om $x$ utgör ett brett åldersintervall
+$n_{c,t}$ är antalet dödsfall i $c$ under $t$ och $p_t$ är
+medelfolkmängden under $t$. Om $x$ utgör ett brett åldersintervall
 kommer dödstalen i olika orsaker ofta att påverkas av trender i
 åldersfördelningen. Stigande medelålder hos befolkningen ger ofta ökade
 dödstal i åldersrelaterade sjukdomsgrupper som cancer, hjärtsjukdomar
