@@ -15,6 +15,7 @@ tables = Dict(:deaths => "Deaths", :pop => "Pop")
 dfarrmatch(col, arr) = map((x) -> in(x, arr), Vector(col))
 ctrycodes = map((x)->parse(x), collect(keys(conf["countries"])))
 perc_round(value) = replace("$(round(value, 4))", ".", ",")
+dthalias(language) = ucfirst(conf["deaths"]["alias"][language])
 
 function caalias(cause, language)
 	if cause=="pop"
@@ -180,7 +181,7 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 	ages = ageslice(sage, eage, agemean, language)
 	agealias = ages[:alias]
 	agelist = ages[:agelist]
-	figtitle = "Döda $(pframes[:ca1alias])/$(pframes[:ca2alias]) $ctryalias"
+	figtitle = "$(dthalias(language)) $(pframes[:ca1alias])/$(pframes[:ca2alias]) $ctryalias"
 	p = bp.figure(title = figtitle, y_axis_label = agealias,
 		plot_width = 600, plot_height = 600)
 	minvals = []
@@ -212,7 +213,7 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 	ctryalias = conf["countries"][string(country)]["alias"][language]
 	pframes = propplotframes(ca1, ca2, framedict, language)
 	sexalias = conf["sexes"][string(sex)]["alias"][language]
-	figtitle = "Döda $(pframes[:ca1alias])/$(pframes[:ca2alias]) $sexalias $ctryalias"
+	figtitle = "$(dthalias(language)) $(pframes[:ca1alias])/$(pframes[:ca2alias]) $sexalias $ctryalias"
 	p = bp.figure(title = figtitle, y_axis_type = y_axis_type,
 		toolbar_location = "below", toolbar_sticky = false,
 		plot_width = 600, plot_height = 600)
@@ -247,7 +248,7 @@ function propscat_yrsctry(ca1, ca2, sex, countries, sage, eage, year1, year2, ag
 	agealias = ages[:alias]
 	agelist = ages[:agelist]
 	sexalias =  conf["sexes"][string(sex)]["alias"][language]
-	figtitle = "Döda $(pframes[:ca1alias])/$(pframes[:ca2alias])\n$agealias $sexalias"
+	figtitle = "$(dthalias(language)) $(pframes[:ca1alias])/$(pframes[:ca2alias])\n$agealias $sexalias"
 	yr1propframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], sex,
 		countries, agelist, year1, agemean, :Country)
 	yr2propframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], sex,
@@ -283,7 +284,7 @@ function propscat_sexesctry(ca1, ca2, countries, sage, eage, year, agemean,
 	ages = ageslice(sage, eage, agemean, language)
 	agealias = ages[:alias]
 	agelist = ages[:agelist]
-	figtitle = "Döda $(pframes[:ca1alias])/$(pframes[:ca2alias])\n$agealias $year"
+	figtitle = "$(dthalias(language)) $(pframes[:ca1alias])/$(pframes[:ca2alias])\n$agealias $year"
 	fempropframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], 2,
 		countries, agelist, year, agemean, :Country)
 	malepropframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], 1,
@@ -496,8 +497,9 @@ function writetempl(language, fname, sitepath)
 	haktemplpath = normpath(sitepath, "templates")
 	mkpath(haktemplpath)
 	tpl = readstring(normpath(datapath, "$fname.mustache"))
+	maintempl = Dict()
 	if (fname == "default" || fname == "site")
-		maintempldicts = map((p)->
+		maintempl["maintempldicts"] = map((p)->
 			Dict("plottype" => p, "alias" => conf["plottypes"][p]["alias"][language]),
 			keys(conf["plottypes"]))
 		if fname == "default"
@@ -507,22 +509,29 @@ function writetempl(language, fname, sitepath)
 			outpath = sitepath
 			ext = "hs"
 		end
-	elseif fname == "mortchartdoc"
-		maintempldicts = map((cc)->
-			Dict("class" => cc, "alias" => conf["causeclasses"][cc]["alias"][language],
-			"causes" => ccflt(parse(cc), language)),
-			keys(conf["causeclasses"]))
+	elseif (fname == "index" || fname == "mortchartdoc")
+		if fname == "index"
+			ext = "html"
+		elseif fname == "mortchartdoc"
+			ext = "md"
+			maintempl["maintempldicts"] = map((cc)->
+				Dict("class" => cc,
+				"alias" => conf["causeclasses"][cc]["alias"][language],
+				"causes" => ccflt(parse(cc), language)),
+				keys(conf["causeclasses"]))
+			maintempl["refhead"] = conf["refhead"][language]
+		end
 		outpath = sitepath
-		ext = "md"
+		maintempl["body"] = readstring(normpath(datapath, "$fname-$language.$ext"))
 	end
-	write(normpath(outpath, "$fname.$ext"), render(tpl, maintempldicts = maintempldicts))
+	write(normpath(outpath, "$fname.$ext"), render(tpl, maintempl = maintempl))
 end
 
 function writeplotsite(framedict, language,
 	sitepath = normpath(mainpath, "mortchart-site"))
 	sitesubpaths = DataStructures.OrderedDict(
 		"siteroot" => Dict("path" => "", "files" => 
-			["default.csl"; "index.html"; "mortchartdoc_biber.bib"]),
+			["default.csl"; "mortchartdoc_biber.bib"]),
 		"css" => Dict("path" => "css", "files" => ["default.css"]),
 		"images" => Dict("path" => "images", "files" => ["mortchartico.png"]),
 		"charts" => Dict("path" => "charts", "files" => []))
@@ -543,9 +552,9 @@ function writeplotsite(framedict, language,
 	chartdestpath = sitefullsubpaths["charts"]
 	for chartfile in readdir(chartpath)
 		mv(normpath(chartpath, chartfile), normpath(chartdestpath, chartfile),
-			remove_destination = true)
+		remove_destination = true)
 	end
-	for fname in ["default"; "site"; "mortchartdoc"]
+	for fname in ["default"; "index"; "site"; "mortchartdoc"]
 		writetempl(language, fname, sitepath)
 	end
 end

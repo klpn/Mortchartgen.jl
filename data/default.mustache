@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+{{#:maintempl}}<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="sv" lang="sv">
@@ -19,8 +19,8 @@
             </div>
             <div id="navigation">
 		<h1>Denna webbplats</h1>
-		<a href="/">Hem</a>{{#:maintempldicts}}
-		<a href="/{{plottype}}.html">{{alias}}</a>{{/:maintempldicts}}
+		<a href="/">Hem</a>{{#maintempldicts}}
+		<a href="/{{plottype}}.html">{{alias}}</a>{{/maintempldicts}}
 		<a href="/mortchartdoc.html">Dokumentation</a>
 		<h1>Annat av mig</h1>
 			<a href="http://diversepedanteri.blogspot.se">Blogg 2008&ndash;2013</a>
@@ -40,4 +40,4 @@
 	   <a href="http://jaspervdj.be/hakyll">Hakyll</a>. <a href="https://github.com/klpn/Mortchartgen.jl">Källkod.</a> Kakor används för inställningar för <a href="http://bokeh.pydata.org/en/latest/">Bokeh</a> och <a href="https://www.mathjax.org/">MathJax</a>; dessa funktioner kräver också att Javascript är aktiverat.
         </div>
     </body>
-</html>
+</html>{{/:maintempl}}

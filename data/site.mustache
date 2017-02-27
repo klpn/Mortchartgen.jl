@@ -1,6 +1,6 @@
 {{!
 vim: set filetype=haskell:
-}}--------------------------------------------------------------------------------
+}}{{#:maintempl}}--------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 import           Data.Monoid (mappend)
 import           Hakyll
@@ -45,7 +45,7 @@ main = hakyll $ do
                 >>= loadAndApplyTemplate "templates/default.html" indexCtx
                 >>= relativizeUrls
 
-{{#:maintempldicts}}
+{{#maintempldicts}}
     match "{{plottype}}.html" $ do
         route idRoute
         compile $ do
@@ -57,7 +57,7 @@ main = hakyll $ do
                 >>= applyAsTemplate plotlistCtx
                 >>= loadAndApplyTemplate "templates/default.html" plotlistCtx
                 >>= relativizeUrls
-{{/:maintempldicts}}
+{{/maintempldicts}}
 
     match "templates/*" $ compile templateCompiler
     match "*.bib" $ compile biblioCompiler
@@ -73,3 +73,4 @@ bibtexCompiler = do
     getResourceBody 
       >>= readPandocBiblio pandocReaderOptions csl bib
       >>= return . writePandocWith pandocWriterOptions
+{{/:maintempl}}
