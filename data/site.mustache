@@ -37,7 +37,7 @@ main = hakyll $ do
         route idRoute
         compile $ do
             let indexCtx =
-                    constField "title" "Huvudsida"                `mappend`
+                    constField "title" "{{indexpagetitle}}"                `mappend`
                     defaultContext
 
             getResourceBody

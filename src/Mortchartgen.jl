@@ -516,6 +516,7 @@ function writetempl(language, fname, sitepath)
 				readstring(normpath(datapath, "footer-$language.$ext"))
 		elseif fname == "site"
 			outpath = sitepath
+			maintempl["indexpagetitle"] = conf["indexpagetitle"][language]
 			ext = "hs"
 		end
 	elseif (fname == "index" || fname == "mortchartdoc")

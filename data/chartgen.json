@@ -180,7 +180,7 @@
         },
         "circnonath": {
             "alias": {
-		    "en": "non-ahterosclerotic circulatory diseases",
+		    "en": "non-atherosclerotic circulatory diseases",
 		    "sv": "cirkulationsorgan icke ateroskleros"
 	    },
             "causeclass": 3,
@@ -586,7 +586,7 @@
 		    "sv": "ICD-6/7: 300--309, 341--352, 354--369, 380--384, 386, 388--390, 394--398; ICD-8: 290--299, 321--344, 346--358, 370--373, 376--380, 384--389; ICD-9: 290, 330--340; ICD-10: F01--F09, G10--G37 (för lista 101 F01--F99, G04--G98)"
 	    },
             "note": {
-		    "en": "Includes neurodegnerative diseases (like Alzheimer, Parkinson, mutliple sclerosis), including so-called organic mental disorders (mostly dementia) in the chapter for mental disorders. Increases in the proprtion of deaths among old people during later decades are mainly due to a tendency to more often report dementia rather than e.g. pneumonia or atherosclerosis as underlying cause of deaht (compare the estimations of trends in dementia mortality from the 1980s based on prevalence, available from @ihmecodviz).",
+		    "en": "Includes neurodegnerative diseases (like Alzheimer, Parkinson, mutliple sclerosis), including so-called organic mental disorders (mostly dementia) in the chapter for mental disorders. Increases in the proprtion of deaths among old people during later decades are mainly due to a tendency to more often report dementia rather than e.g. pneumonia or atherosclerosis as underlying cause of death (compare the estimations of trends in dementia mortality from the 1980s based on prevalence, available from @ihmecodviz).",
 		    "sv": "Inkluderar neurodegenerativa sjukdomar (alzheimers, parkinsons, multipel skleros m.m.), inklusive sådana som räknas till s.k. organiska störningar i kapitlet för psykiatriska diagnoser. Ökningar av andelen dödsfall bland äldre på senare år är till stor del relaterade till ökad benägenhet att rapportera demensrelaterade tillstånd snarare än t.ex. lunginflammation eller ateroskleros som underliggande dödsorsak (jämför med de uppskattningar av trender för demens från 1980-talet baserade på prevalens som finns tillgängliga via @ihmecodviz)."
 	    },
             "sex": [2,1]
@@ -1310,6 +1310,10 @@
 			    "sv": "Jämförelse av kön per år"
 		    }
 	    }
+    },
+    "indexpagetitle": {
+	    "en": "Main page",
+	    "sv": "Huvudsida"
     },
     "refhead": {
 	    "en": "References",
