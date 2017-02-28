@@ -645,7 +645,7 @@
         },
         "othath": {
             "alias": {
-		    "en": "arterial disease excep for IHD and stroke",
+		    "en": "arterial disease except for IHD and stroke",
 		    "sv": "artärsjukdom utom IHD/slaganfall"
 	    },
             "causeclass": 3,
