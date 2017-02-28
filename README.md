@@ -9,7 +9,7 @@
 This package can be used to generate charts of mortality trends from the WHO
 Mortality Database, as well as web templates and documentation for these charts. 
 It is a reimplementation of the
-[mortchartgen](https://github.com/klpn/mortchartgen), which uses Python and R
+[mortchartgen](https://github.com/klpn/mortchartgen) program, which uses Python and R
 for chart generation. I use the package the generate my site with mortality
 charts, which is available in [English](http://mortchart-en.klpn.se/) and
 [Swedish](http://mortchart.klpn.se) versions.
@@ -22,16 +22,17 @@ Besides the Julia requirements, generation of the site requires the following:
 3. The Haskell [Hakyll](https://github.com/jaspervdj/hakyll) library,
    which is used to generate the site with documentation.
 
-In order the generate the site:
+In order to generate the site:
 
 1. Run the
    [setupdb.sql](https://github.com/klpn/Mortchartgen.jl/blob/master/data/setupdb.sql)
-   script in order to set up the database.
+   script in order to set up the database, e.g. `mysql
+   --defaults-extra-file=tableimp.cnf < setupdb.sql`. The
+   [tableimp.cnf](https://github.com/klpn/Mortchartgen.jl/blob/master/data/tableimp.cnf)
+   file should be edited before the script is run, in order to suit your MySQL
+   configuration.
 2. Call the functions `download_who` and `table_import` in
    [Download.jl](https://github.com/klpn/Mortchartgen.jl/blob/master/src/Download.jl).
-   The
-   [tableimp.cnf](https://github.com/klpn/Mortchartgen.jl/blob/master/data/tableimp.cnf)
-   file should be edited before `table_import` is called, to suit your MySQL configuration.
 3. Save the frames with aggregated causes of death in CSV files, by calling
    `save_frames(cgen_frames())` in
    [Mortchartgen.jl](https://github.com/klpn/Mortchartgen.jl/blob/master/src/Mortchartgen.jl).
