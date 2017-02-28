@@ -22,7 +22,8 @@ Besides the Julia requirements, generation of the site requires the following:
 3. The Haskell [Hakyll](https://github.com/jaspervdj/hakyll) library,
    which is used to generate the site with documentation.
 
-In order to generate the site:
+In order to generate the site in a given language (`en` and `sv` are currently
+defined in the configuration file):
 
 1. Run the
    [setupdb.sql](https://github.com/klpn/Mortchartgen.jl/blob/master/data/setupdb.sql)
@@ -42,7 +43,7 @@ In order to generate the site:
    The saved frame can then be reloaded with `frames=load_frames()`.
 4. Generate the site files by calling `writeplotsite` with loaded frames, language
    and output directory, e.g. `writeplotsite(frames, "en", normpath(mainpath,
-   "mortchart-site-en")`.
+   "mortchart-site-en"))`.
 5. Compile the site generator from the `site.hs` file in the output directory.
    Using the Glasgow Haskell Compiler, you can run `ghc --make site` from the shell.
 6. Generate the site itself by running `./site build` in the output directory.
