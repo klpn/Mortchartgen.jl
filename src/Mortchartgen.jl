@@ -4,6 +4,7 @@ using DataFrames, DataStructures, JSON, Loess, Mustache, MySQL, PyCall
 @pyimport bokeh as bo
 @pyimport bokeh.plotting as bp
 @pyimport bokeh.palettes as bpal
+bml = pyimport("bokeh.models")
 
 mainpath = normpath(Pkg.dir(), "Mortchartgen")
 datapath = normpath(mainpath, "data")
@@ -165,9 +166,9 @@ end
 
 function listlabels(country, years, minvals, framedict)
 	lch = listchanges(country, years, framedict)
-	lchdata = bo.models[:ColumnDataSource](data = Dict("year" => lch[:Year],
+	lchdata = bml[:ColumnDataSource](data = Dict("year" => lch[:Year],
 		"list" => lch[:List]))
-	listlabels = bo.models[:LabelSet](x = "year", y = minimum(minvals), 
+	listlabels = bml[:LabelSet](x = "year", y = minimum(minvals), 
 		text = "list", text_color = "red", angle = pi/2, render_mode = "canvas", 
 		source = lchdata)
 end
@@ -198,7 +199,7 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 		minvals = vcat(minvals, minimum(propframe[:value]))
 	end
 	p[:add_layout](listlabels(country, years, minvals, framedict))
-	p[:add_tools](bo.models[:CrosshairTool]())
+	p[:add_tools](bml[:CrosshairTool]())
 	if showplot
 		bp.show(p)
 	else
@@ -229,7 +230,7 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 		agelegends = vcat(agelegends, (agealias, [ageline]))
 		minvals = vcat(minvals, minimum(propframe[:value]))
 	end
-	legend = bo.models[:Legend](items = agelegends, location = (0, -30))
+	legend = bml[:Legend](items = agelegends, location = (0, -30))
 	p[:add_layout](legend, "right")
 	p[:add_layout](listlabels(country, years, minvals, framedict))
 	if showplot
@@ -256,9 +257,9 @@ function propscat_yrsctry(ca1, ca2, sex, countries, sage, eage, year1, year2, ag
 	propframe = join(yr1propframe, yr2propframe, on=:Country)
 	isos = map((c)->conf["countries"][string(c)]["iso3166"], propframe[:Country])
 	ctrynames = map((c)->conf["countries"][string(c)]["alias"][language], propframe[:Country])
-	scatdata = bo.models[:ColumnDataSource](data = Dict("year1prop" => propframe[:value], 
+	scatdata = bml[:ColumnDataSource](data = Dict("year1prop" => propframe[:value], 
 		"year2prop" => propframe[:value_1], "isos" => isos, "ctrynames" => ctrynames))
-	hover = bo.models[:HoverTool](tooltips =
+	hover = bml[:HoverTool](tooltips =
 			[("befolkning", "@ctrynames"),
 			("$year1", "@year1prop"), 
 			("$year2", "@year2prop")]) 
@@ -266,7 +267,7 @@ function propscat_yrsctry(ca1, ca2, sex, countries, sage, eage, year1, year2, ag
 		y_axis_label = "$year2", plot_width = 600, plot_height = 600)
 	p[:add_tools](hover)
 	p[:circle](x = "year1prop", y = "year2prop", size = 12, source = scatdata)
-	isolabels = bo.models[:LabelSet](x = "year1prop", y = "year2prop", text = "isos",
+	isolabels = bml[:LabelSet](x = "year1prop", y = "year2prop", text = "isos",
 		level = "glyph", x_offset = 5, y_offset = 5, source = scatdata)
 	p[:add_layout](isolabels)
 	if showplot
@@ -294,9 +295,9 @@ function propscat_sexesctry(ca1, ca2, countries, sage, eage, year, agemean,
 	malealias = conf["sexes"]["1"]["alias"][language]
 	isos = map((c)->conf["countries"][string(c)]["iso3166"], propframe[:Country])
 	ctrynames = map((c)->conf["countries"][string(c)]["alias"][language], propframe[:Country])
-	scatdata = bo.models[:ColumnDataSource](data = Dict("femprop" => propframe[:value], 
+	scatdata = bml[:ColumnDataSource](data = Dict("femprop" => propframe[:value], 
 		"maleprop" => propframe[:value_1], "isos" => isos, "ctrynames" => ctrynames))
-	hover = bo.models[:HoverTool](tooltips =
+	hover = bml[:HoverTool](tooltips =
 			[("befolkning", "@ctrynames"),
 			("$femalias", "@femprop"), 
 			("$malealias", "@maleprop")])
@@ -304,7 +305,7 @@ function propscat_sexesctry(ca1, ca2, countries, sage, eage, year, agemean,
 		y_axis_label = malealias, plot_width = 600, plot_height = 600)
 	p[:add_tools](hover)
 	p[:circle](x = "femprop", y = "maleprop", size = 12, source = scatdata)
-	isolabels = bo.models[:LabelSet](x = "femprop", y = "maleprop", text = "isos",
+	isolabels = bml[:LabelSet](x = "femprop", y = "maleprop", text = "isos",
 		level = "glyph", x_offset = 5, y_offset = 5, source = scatdata)
 	p[:add_layout](isolabels)
 	if showplot

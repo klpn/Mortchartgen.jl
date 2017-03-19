@@ -35,14 +35,14 @@ defined in the configuration file):
 2. Call the functions `download_who` and `table_import` in
    [Download.jl](https://github.com/klpn/Mortchartgen.jl/blob/master/src/Download.jl).
 3. Save the frames with aggregated causes of death in CSV files, by calling
-   `save_frames(cgen_frames())` in
+   `Mortchartgen.save_frames(cgen_frames())` in
    [Mortchartgen.jl](https://github.com/klpn/Mortchartgen.jl/blob/master/src/Mortchartgen.jl).
    Before this, you may have to edit the `conn_config` object in
    [chartgen.json](https://github.com/klpn/Mortchartgen.jl/blob/master/data/chartgen.json)
    to suit your MySQL settings.
-   The saved frame can then be reloaded with `frames=load_frames()`.
+   The saved frame can then be reloaded with `frames=Mortchartgen.load_frames()`.
 4. Generate the site files by calling `writeplotsite` with loaded frames, language
-   and output directory, e.g. `writeplotsite(frames, "en", normpath(mainpath,
+   and output directory, e.g. `Mortchartgen.writeplotsite(frames, "en", normpath(mainpath,
    "mortchart-site-en"))`.
 5. Compile the site generator from the `site.hs` file in the output directory.
    Using the Glasgow Haskell Compiler, you can run `ghc --make site` from the shell.
