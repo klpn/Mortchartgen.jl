@@ -34,7 +34,7 @@ function download_who(dlpath = ".", filelist = dllist)
 end
 
 function table_import(dlpath = ".", 
-	tablencnf = normpath(datapath, "tableimp.cnf"), filelist = tablelist)
+	tablecnf = normpath(datapath, "tableimp.cnf"), filelist = tablelist)
 	for filename in tablelist
 		dlfilepath = normpath(dlpath, filename)
 		if filename == "pop"
