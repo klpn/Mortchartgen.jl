@@ -14,7 +14,9 @@ information om orsaksspecifika mortalitetstrender i befolkningar.
 Diagram kan visas och laddas ned efter val av befolkning, åldersgrupp
 och dödsorsaksgrupp. De mått som redovisas i diagrammen har beräknats
 med hjälp av öppna data från @whomort, men WHO är inte ansvariga för
-något innehåll på webbplatsen.
+något innehåll på webbplatsen. För vissa befolkningar finns inte data
+tillgängliga via @whomort för de senaste åren. I dessa fall används i stället
+uppskattningar tillgängliga via @wpp.
 
 Det finns sedan tidigare flera webbplatser med visualiseringar av
 mortalitetstrender. En av de mest avancerade är @ihmecodviz, som

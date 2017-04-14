@@ -13,6 +13,7 @@ mkpath(chartpath)
 conf = JSON.parsefile(normpath(datapath, "chartgen.json"),
 	dicttype=DataStructures.OrderedDict)
 tables = Dict(:deaths => "Deaths", :pop => "Pop")
+wpp = readtable(normpath(datapath, "wppconverted.csv"))
 dfarrmatch(col, arr) = map((x) -> in(x, arr), Vector(col))
 ctrycodes = map((x)->parse(x), collect(keys(conf["countries"])))
 perc_round(value) = replace("$(round(value, 4))", ".", ",")
@@ -77,6 +78,14 @@ function cgen_frames(causes = keys(conf["causes"]))
 		frame_trimmed = frame[dfarrmatch(frame[:Country], ctrycodes), :]
 		frame_trimmed_long = stack(frame_trimmed, ncols-25:ncols)
 		frames[tblkey] = frame_trimmed_long
+	end
+	for ctrycode in ctrycodes
+		ctry = conf["countries"]["$ctrycode"]
+		if haskey(ctry, "wppstart")
+			wppctry = wpp[((wpp[:Country].==ctrycode)&
+				(wpp[:Year].>=ctry["wppstart"])), :]
+			frames[:pop] = vcat(frames[:pop], wppctry)
+		end
 	end
 	frames
 end
@@ -184,7 +193,9 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 	agelist = ages[:agelist]
 	figtitle = "$(dthalias(language)) $(pframes[:ca1alias])/$(pframes[:ca2alias]) $ctryalias"
 	p = bp.figure(title = figtitle, y_axis_label = agealias,
+		toolbar_location = "below", toolbar_sticky = false,
 		plot_width = 600, plot_height = 600)
+	sexlegends = []
 	minvals = []
 	for sex in sexes
 		sexalias = conf["sexes"][string(sex)]["alias"][language]
@@ -194,10 +205,14 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 		yrfloatarr = convert(Array{Float64}, propframe[:Year])
 		valarr = convert(Array, propframe[:value])
 		propsm = Loess.predict(loess(yrfloatarr, valarr), yrfloatarr)
-		p[:circle](propframe[:Year], propframe[:value], legend = sexalias, color = col)
-		p[:line](propframe[:Year], propsm, legend = "$sexalias loess", color = col)
+		sexcirc = p[:circle](propframe[:Year], propframe[:value], color = col)
+		sexline = p[:line](propframe[:Year], propsm, color = col)
+		sexlegends = vcat(sexlegends,
+			[(sexalias, [sexcirc]); ("$sexalias loess", [sexline])]...)
 		minvals = vcat(minvals, minimum(propframe[:value]))
 	end
+	legend = bml[:Legend](items = sexlegends, location = (0, -30))
+	p[:add_layout](legend, "right")
 	p[:add_layout](listlabels(country, years, minvals, framedict))
 	p[:add_tools](bml[:CrosshairTool]())
 	if showplot

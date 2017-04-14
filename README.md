@@ -32,9 +32,15 @@ defined in the configuration file):
    [tableimp.cnf](https://github.com/klpn/Mortchartgen.jl/blob/master/data/tableimp.cnf)
    file should be edited before the script is run, in order to suit your MySQL
    configuration.
-2. Call the functions `download_who` and `table_import` in
+2. Call the functions `download_who`, `table_import` and `wpp_convert` in
    [Download.jl](https://github.com/klpn/Mortchartgen.jl/blob/master/src/Download.jl).
-3. Save the frames with aggregated causes of death in CSV files, by calling
+   This downloads and imports the WHO data into a MySQL database, and also
+   downloads data from the [UN World Population
+   Projections](https://esa.un.org/unpd/wpp/), which is used to
+   calculate mortality rates for some countries where population is lacking in
+   WHO Mortality Database for recent years, and converts this data so that it
+   can be merged with the population data frame created in the next step.
+3. Save the frames with aggregated causes of death and population in CSV files, by calling
    `Mortchartgen.save_frames(cgen_frames())` in
    [Mortchartgen.jl](https://github.com/klpn/Mortchartgen.jl/blob/master/src/Mortchartgen.jl).
    Before this, you may have to edit the `conn_config` object in
@@ -42,8 +48,8 @@ defined in the configuration file):
    to suit your MySQL settings.
    The saved frame can then be reloaded with `frames=Mortchartgen.load_frames()`.
 4. Generate the site files by calling `writeplotsite` with loaded frames, language
-   and output directory, e.g. `Mortchartgen.writeplotsite(frames, "en", normpath(mainpath,
-   "mortchart-site-en"))`.
+   and output directory, e.g. `Mortchartgen.writeplotsite(frames, "en",
+   normpath(Mortchartgen.mainpath, "mortchart-site-en"))`.
 5. Compile the site generator from the `site.hs` file in the output directory.
    Using the Glasgow Haskell Compiler, you can run `ghc --make site` from the shell.
 6. Generate the site itself by running `./site build` in the output directory.

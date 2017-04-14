@@ -13,7 +13,9 @@ The aim of this site is to give comprehensible information about trends for
 cause-specific mortality in different population. Charts may be viewed or
 downloaded after choice of population, age group and cause of death group. The
 measures shown in the charts have been calculated using open data from
-@whomort, but the WHO are not responsible for any content on the site.
+@whomort, but the WHO are not responsible for any content on the site. For some
+countries where population is not available from @whomort for recent years,
+estimates from @wpp is used instead.
 
 There are several other websites with visualizations of mortality trends. One
 of the most advanced is @ihmecodviz, which contains data for all countries in

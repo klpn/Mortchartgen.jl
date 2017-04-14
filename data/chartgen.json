@@ -952,9 +952,10 @@
 		    "sv": "Kanada"
 	    },
             "countryclass": 1,
-            "endyear": 2005,
+            "endyear": 2012,
             "iso3166": "CA",
-            "startyear": 1950
+            "startyear": 1950,
+	    "wppstart": 2006
         },
         "2450": {
             "alias": {
@@ -962,9 +963,10 @@
 		    "sv": "USA"
 	    },
             "countryclass": 1,
-            "endyear": 2007,
+            "endyear": 2014,
             "iso3166": "US",
-            "startyear": 1950
+            "startyear": 1950,
+	    "wppstart": 2008
         },
         "3150": {
             "alias": {
@@ -972,7 +974,7 @@
 		    "sv": "Israel"
 	    },
             "countryclass": 1,
-            "endyear": 2013,
+            "endyear": 2014,
             "iso3166": "IL",
             "startyear": 1957
         },
@@ -982,7 +984,7 @@
 		    "sv": "Japan"
 	    },
             "countryclass": 1,
-            "endyear": 2013,
+            "endyear": 2014,
             "iso3166": "JP",
             "startyear": 1950
         },
@@ -1002,9 +1004,19 @@
 		    "sv": "Belgien"
 	    },
             "countryclass": 1,
-            "endyear": 2013,
+            "endyear": 2014,
             "iso3166": "BE",
             "startyear": 1954
+        },
+        "4030": {
+            "alias": {
+		    "en": "Bulgaria",
+		    "sv": "Bulgarien"
+	    },
+            "countryclass": 1,
+            "endyear": 2013,
+            "iso3166": "BG",
+            "startyear": 1964
         },
         "4050": {
             "alias": {
@@ -1012,7 +1024,7 @@
 		    "sv": "Danmark"
 	    },
             "countryclass": 1,
-            "endyear": 2012,
+            "endyear": 2014,
             "iso3166": "DK",
             "startyear": 1951
         },
@@ -1052,9 +1064,19 @@
 		    "sv": "Grekland"
 	    },
             "countryclass": 1,
-            "endyear": 2013,
+            "endyear": 2014,
             "iso3166": "GR",
             "startyear": 1961
+        },
+        "4150": {
+            "alias": {
+		    "en": "Hungary",
+		    "sv": "Ungern"
+	    },
+            "countryclass": 1,
+            "endyear": 2015,
+            "iso3166": "HU",
+            "startyear": 1955
         },
         "4170": {
             "alias": {
@@ -1082,7 +1104,7 @@
 		    "sv": "Nederländerna"
 	    },
             "countryclass": 1,
-            "endyear": 2013,
+            "endyear": 2015,
             "iso3166": "NL",
             "startyear": 1950
         },
@@ -1096,6 +1118,16 @@
             "iso3166": "NO",
             "startyear": 1951
         },
+        "4230": {
+            "alias": {
+		    "en": "Poland",
+		    "sv": "Polen"
+	    },
+            "countryclass": 1,
+            "endyear": 2014,
+            "iso3166": "PL",
+            "startyear": 1959
+        },
         "4240": {
             "alias": {
 		    "en": "Portugal",
@@ -1105,6 +1137,16 @@
             "endyear": 2013,
             "iso3166": "PT",
             "startyear": 1955
+        },
+        "4270": {
+            "alias": {
+		    "en": "Romania",
+		    "sv": "Rumänien"
+	    },
+            "countryclass": 1,
+            "endyear": 2015,
+            "iso3166": "RO",
+            "startyear": 1969
         },
         "4280": {
             "alias": {
@@ -1122,7 +1164,7 @@
 		    "sv": "Sverige"
 	    },
             "countryclass": 0,
-            "endyear": 2014,
+            "endyear": 2015,
             "iso3166": "SE",
             "startyear": 1951
         },
