@@ -197,6 +197,7 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 		plot_width = 600, plot_height = 600)
 	sexlegends = []
 	minvals = []
+	propframes = Dict()
 	for sex in sexes
 		sexalias = conf["sexes"][string(sex)]["alias"][language]
 		col = conf["sexes"][string(sex)]["color"]
@@ -210,6 +211,7 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 		sexlegends = vcat(sexlegends,
 			[(sexalias, [sexcirc]); ("$sexalias loess", [sexline])]...)
 		minvals = vcat(minvals, minimum(propframe[:value]))
+		propframes[sex] = Dict(:propframe => propframe, :propsm => propsm)
 	end
 	legend = bml[:Legend](items = sexlegends, location = (0, -30))
 	p[:add_layout](legend, "right")
@@ -220,6 +222,7 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 	else
 		bp.save(p)
 	end
+	propframes
 end
 
 function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
@@ -235,6 +238,7 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 		plot_width = 600, plot_height = 600)
 	agelegends = []
 	minvals = []
+	propframes = Dict()
 	for agetuple in agetuples
 		ages = ageslice(agetuple[1], agetuple[2], agemean, language)
 		agealias = ages[:alias]
@@ -244,6 +248,7 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 		ageline = p[:line](propframe[:Year], propframe[:value], color = ages[:color])
 		agelegends = vcat(agelegends, (agealias, [ageline]))
 		minvals = vcat(minvals, minimum(propframe[:value]))
+		propframes[agealias] = propframe
 	end
 	legend = bml[:Legend](items = agelegends, location = (0, -30))
 	p[:add_layout](legend, "right")
@@ -253,6 +258,7 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 	else
 		bp.save(p)
 	end
+	propframes
 end
 
 function propscat_yrsctry(ca1, ca2, sex, countries, sage, eage, year1, year2, agemean,
@@ -290,6 +296,7 @@ function propscat_yrsctry(ca1, ca2, sex, countries, sage, eage, year1, year2, ag
 	else
 		bp.save(p)
 	end
+	Dict(year1 => yr1propframe, year2 => yr2propframe)
 end
 
 function propscat_sexesctry(ca1, ca2, countries, sage, eage, year, agemean,
@@ -328,6 +335,7 @@ function propscat_sexesctry(ca1, ca2, countries, sage, eage, year, agemean,
 	else
 		bp.save(p)
 	end
+	Dict(:females => fempropframe, :males => malepropframe)
 end
 
 batchages_caflt(cause) = filter((age)-> 
