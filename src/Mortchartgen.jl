@@ -82,7 +82,7 @@ function cgen_frames(causes = keys(conf["causes"]))
 	for ctrycode in ctrycodes
 		ctry = conf["countries"]["$ctrycode"]
 		if haskey(ctry, "wppstart")
-			wppctry = wpp[((wpp[:Country].==ctrycode)&
+			wppctry = wpp[((wpp[:Country].==ctrycode).&
 				(wpp[:Year].>=ctry["wppstart"])), :]
 			frames[:pop] = vcat(frames[:pop], wppctry)
 		end
@@ -107,8 +107,8 @@ function load_frames()
 end
 
 subframe_sray(df, sex, countries, agelist, years) = df[((df[:Sex].==sex)
-	& (dfarrmatch(df[:Country], countries)) & (dfarrmatch(df[:variable], agelist))
-	& (dfarrmatch(df[:Year], years))), :]
+	.& (dfarrmatch(df[:Country], countries)) .& (dfarrmatch(df[:variable], agelist))
+	.& (dfarrmatch(df[:Year], years))), :]
 dfgrp_agemean(df, grpcol, f = mean) = by(df, grpcol, x -> DataFrame(value = f(x[:value])))
 dfgrp_sum(df, grpcol, f = sum) = by(df, grpcol,
 x -> DataFrame(value = f(x[:value]), value_1 = f(x[:value_1])))
