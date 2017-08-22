@@ -46,7 +46,7 @@
     "causedist": [
         "circ",
         "tum",
-        "lfinf",
+        "respinf",
         "stihiv",
         "neurdegnovd",
         "illdef",
@@ -65,7 +65,7 @@
                 "07A": "A000",
                 "08A": "A000",
                 "09B": "B00",
-                "10": "AAA",
+                "10": "[A-Y][0-9]",
                 "101": "1000"
             },
             "classtot": true,
@@ -519,7 +519,7 @@
 	    },
             "sex": [2,1]
         },
-        "lfinf": {
+        "respinf": {
             "alias": {
 		    "en": "respiratory infections",
 		    "sv": "luftvägsinfektioner"
