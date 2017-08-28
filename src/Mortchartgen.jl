@@ -18,6 +18,7 @@ dfarrmatch(col, arr) = map((x) -> in(x, arr), Vector(col))
 ctrycodes = map((x)->parse(x), collect(keys(conf["countries"])))
 perc_round(value) = replace("$(round(value, 4))", ".", ",")
 dthalias(language) = ucfirst(conf["deaths"]["alias"][language])
+obend = "svg"
 
 function caalias(cause, language)
 	if cause=="pop"
@@ -204,7 +205,7 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 	agealias = ages[:alias]
 	agelist = ages[:agelist]
 	figtitle = "$(dthalias(language)) $(pframes[:ca1alias])/$(pframes[:ca2alias]) $ctryalias"
-	p = bp.figure(title = figtitle, y_axis_label = agealias,
+	p = bp.figure(output_backend = obend, title = figtitle, y_axis_label = agealias,
 		toolbar_location = "below", toolbar_sticky = false,
 		plot_width = 600, plot_height = 600)
 	sexlegends = []
@@ -247,8 +248,8 @@ function plot_sexesrats(sexesyrsplots, language, outfile, showplot, numsex = 1, 
 	numsexalias = conf["sexes"][string(numsex)]["alias"][language]
 	denomsexalias = conf["sexes"][string(denomsex)]["alias"][language]
 	figtitle = "Relativt antal döda $numsexalias/$denomsexalias"
-	p = bp.figure(title = figtitle, toolbar_location = "below", toolbar_sticky = false,
-		plot_width = 900, plot_height = 600)
+	p = bp.figure(output_backend = obend, title = figtitle, toolbar_location = "below", toolbar_sticky = false,
+		plot_width = 800, plot_height = 600)
 	sratlegends = []
 	for (i, syplot) in enumerate(sexesyrsplots)
 		meta = syplot[:meta]
@@ -279,7 +280,7 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 	pframes = propplotframes(ca1, ca2, framedict, language)
 	sexalias = conf["sexes"][string(sex)]["alias"][language]
 	figtitle = "$(dthalias(language)) $(pframes[:ca1alias])/$(pframes[:ca2alias]) $sexalias $ctryalias"
-	p = bp.figure(title = figtitle, y_axis_type = y_axis_type,
+	p = bp.figure(output_backend = obend, title = figtitle, y_axis_type = y_axis_type,
 		toolbar_location = "below", toolbar_sticky = false,
 		plot_width = 600, plot_height = 600)
 	agelegends = []
@@ -330,7 +331,7 @@ function propscat_yrsctry(ca1, ca2, sex, countries, sage, eage, year1, year2, ag
 			[("befolkning", "@ctrynames"),
 			("$year1", "@year1prop"), 
 			("$year2", "@year2prop")]) 
-	p = bp.figure(title = figtitle, x_axis_label = "$year1",
+	p = bp.figure(output_backend = obend, title = figtitle, x_axis_label = "$year1",
 		y_axis_label = "$year2", plot_width = 600, plot_height = 600)
 	p[:add_tools](hover)
 	p[:circle](x = "year1prop", y = "year2prop", size = 12, source = scatdata)
@@ -366,7 +367,7 @@ function propscat_sexesctry(ca1, ca2, countries, sage, eage, year, agemean,
 			[("befolkning", "@ctrynames"),
 			("$femalias", "@femprop"), 
 			("$malealias", "@maleprop")])
-	p = bp.figure(title = figtitle, x_axis_label = femalias,
+	p = bp.figure(output_backend = obend, title = figtitle, x_axis_label = femalias,
 		y_axis_label = malealias, plot_width = 600, plot_height = 600)
 	p[:add_tools](hover)
 	p[:circle](x = "femprop", y = "maleprop", size = 12, source = scatdata)
