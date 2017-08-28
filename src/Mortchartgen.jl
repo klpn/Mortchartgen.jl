@@ -182,10 +182,22 @@ function listlabels(country, years, minvals, framedict)
 		source = lchdata)
 end
 
-function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
-	framedict, language, outfile, showplot)
+function preplot(outfile)
 	bp.reset_output()
 	bp.output_file(outfile)
+end
+
+function postplot(figure, showplot)
+	if showplot
+		bp.show(figure)
+	else
+		bp.save(figure)
+	end	
+end
+
+function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
+	framedict, language, outfile, showplot)
+	preplot(outfile)
 	ctryalias = conf["countries"][string(country)]["alias"][language]
 	pframes = propplotframes(ca1, ca2, framedict, language)
 	ages = ageslice(sage, eage, agemean, language)
@@ -197,6 +209,8 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 		plot_width = 600, plot_height = 600)
 	sexlegends = []
 	minvals = []
+	meta = Dict(:ca1 => ca1, :ca2 => ca2, :country => country,
+		:sage => sage, :eage => eage, :agemean => agemean)
 	propframes = Dict()
 	for sex in sexes
 		sexalias = conf["sexes"][string(sex)]["alias"][language]
@@ -213,22 +227,54 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 		minvals = vcat(minvals, minimum(propframe[:value]))
 		propframes[sex] = Dict(:propframe => propframe, :propsm => propsm)
 	end
+	propframes[:meta] = meta
 	legend = bml[:Legend](items = sexlegends, location = (0, -30))
 	p[:add_layout](legend, "right")
 	p[:add_layout](listlabels(country, years, minvals, framedict))
 	p[:add_tools](bml[:CrosshairTool]())
-	if showplot
-		bp.show(p)
-	else
-		bp.save(p)
-	end
+	postplot(p, showplot)
 	propframes
+end
+
+function sexesrat(sexesyrsplot, numsex, denomsex)
+	years = sexesyrsplot[numsex][:propframe][:Year]
+	values = sexesyrsplot[numsex][:propframe][:value]./sexesyrsplot[denomsex][:propframe][:value]
+	DataFrame(Year = years, value = values)
+end
+
+function plot_sexesrats(sexesyrsplots, language, outfile, showplot, numsex = 1, denomsex = 2)
+	preplot(outfile)
+	numsexalias = conf["sexes"][string(numsex)]["alias"][language]
+	denomsexalias = conf["sexes"][string(denomsex)]["alias"][language]
+	figtitle = "Relativt antal döda $numsexalias/$denomsexalias"
+	p = bp.figure(title = figtitle, toolbar_location = "below", toolbar_sticky = false,
+		plot_width = 900, plot_height = 600)
+	sratlegends = []
+	for (i, syplot) in enumerate(sexesyrsplots)
+		meta = syplot[:meta]
+		sratframe = sexesrat(syplot, numsex, denomsex)
+		yrfloatarr = convert(Array{Float64}, sratframe[:Year])
+		valarr = convert(Array, sratframe[:value])
+		sratsm = Loess.predict(loess(yrfloatarr, valarr), yrfloatarr)
+		col = bpal.Category20[20][mod1(i, 20)]
+		sratcirc = p[:circle](sratframe[:Year], sratframe[:value], color = col)
+		sratline = p[:line](sratframe[:Year], sratsm, color = col)
+		ca1alias = caalias(meta[:ca1], language)
+		ca2alias = caalias(meta[:ca2], language)
+		ctryalias = conf["countries"][string(meta[:country])]["alias"][language]
+		ages = ageslice(meta[:sage], meta[:eage], meta[:agemean], language)
+		sratleg = "$ca1alias/$ca2alias, $ctryalias, $(ages[:alias])"
+		sratlegends = vcat(sratlegends, (sratleg, [sratcirc]))
+	end
+	legend = bml[:Legend](items = sratlegends, location = (0, -30))
+	p[:add_layout](legend, "right")
+	p[:add_tools](bml[:CrosshairTool]())
+	postplot(p, showplot)
 end
 
 function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 	framedict, language, y_axis_type, outfile, showplot)
-	bp.reset_output()
-	bp.output_file(outfile)
+	preplot(outfile)
 	ctryalias = conf["countries"][string(country)]["alias"][language]
 	pframes = propplotframes(ca1, ca2, framedict, language)
 	sexalias = conf["sexes"][string(sex)]["alias"][language]
@@ -238,6 +284,8 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 		plot_width = 600, plot_height = 600)
 	agelegends = []
 	minvals = []
+	meta = Dict(:ca1 => ca1, :ca2 => ca2, :sex => sex, :country => country,
+		:agemean => agemean)
 	propframes = Dict()
 	for agetuple in agetuples
 		ages = ageslice(agetuple[1], agetuple[2], agemean, language)
@@ -250,27 +298,25 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 		minvals = vcat(minvals, minimum(propframe[:value]))
 		propframes[agealias] = propframe
 	end
+	propframes[:meta] = meta
 	legend = bml[:Legend](items = agelegends, location = (0, -30))
 	p[:add_layout](legend, "right")
 	p[:add_layout](listlabels(country, years, minvals, framedict))
-	if showplot
-		bp.show(p)
-	else
-		bp.save(p)
-	end
+	postplot(p, showplot)
 	propframes
 end
 
 function propscat_yrsctry(ca1, ca2, sex, countries, sage, eage, year1, year2, agemean,
 	framedict, language, outfile, showplot)
-	bp.reset_output()
-	bp.output_file(outfile)
+	preplot(outfile)
 	pframes = propplotframes(ca1, ca2, framedict, language)
 	ages = ageslice(sage, eage, agemean, language)
 	agealias = ages[:alias]
 	agelist = ages[:agelist]
 	sexalias =  conf["sexes"][string(sex)]["alias"][language]
 	figtitle = "$(dthalias(language)) $(pframes[:ca1alias])/$(pframes[:ca2alias])\n$agealias $sexalias"
+	meta = Dict(:ca1 => ca1, :ca2 => ca2, :sex => sex, :countries => countries,
+		:sage => sage, :eage => eage, :agemean => agemean)
 	yr1propframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], sex,
 		countries, agelist, year1, agemean, :Country)
 	yr2propframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], sex,
@@ -291,23 +337,20 @@ function propscat_yrsctry(ca1, ca2, sex, countries, sage, eage, year1, year2, ag
 	isolabels = bml[:LabelSet](x = "year1prop", y = "year2prop", text = "isos",
 		level = "glyph", x_offset = 5, y_offset = 5, source = scatdata)
 	p[:add_layout](isolabels)
-	if showplot
-		bp.show(p)
-	else
-		bp.save(p)
-	end
-	Dict(year1 => yr1propframe, year2 => yr2propframe)
+	postplot(p, showplot)
+	Dict(:meta => meta, year1 => yr1propframe, year2 => yr2propframe)
 end
 
 function propscat_sexesctry(ca1, ca2, countries, sage, eage, year, agemean,
 	framedict, language, outfile, showplot)
-	bp.reset_output()
-	bp.output_file(outfile)
 	pframes = propplotframes(ca1, ca2, framedict, language)
+	preplot(outfile)
 	ages = ageslice(sage, eage, agemean, language)
 	agealias = ages[:alias]
 	agelist = ages[:agelist]
 	figtitle = "$(dthalias(language)) $(pframes[:ca1alias])/$(pframes[:ca2alias])\n$agealias $year"
+	meta = Dict(:ca1 => ca1, :ca2 => ca2, :countries => countries,
+		:sage => sage, :eage => eage, :agemean => agemean)
 	fempropframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], 2,
 		countries, agelist, year, agemean, :Country)
 	malepropframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], 1,
@@ -330,12 +373,8 @@ function propscat_sexesctry(ca1, ca2, countries, sage, eage, year, agemean,
 	isolabels = bml[:LabelSet](x = "femprop", y = "maleprop", text = "isos",
 		level = "glyph", x_offset = 5, y_offset = 5, source = scatdata)
 	p[:add_layout](isolabels)
-	if showplot
-		bp.show(p)
-	else
-		bp.save(p)
-	end
-	Dict(:females => fempropframe, :males => malepropframe)
+	postplot(p, showplot)
+	Dict(:meta => meta, 2 => fempropframe, 1 => malepropframe)
 end
 
 batchages_caflt(cause) = filter((age)-> 
