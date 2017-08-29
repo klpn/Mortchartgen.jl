@@ -243,11 +243,36 @@ function sexesrat(sexesyrsplot, numsex, denomsex)
 	DataFrame(Year = years, value = values)
 end
 
+function srataliases(sexesyrsplots, language)
+	ca1 = map((s)->caalias(s[:meta][:ca1], language), sexesyrsplots)
+	ca2 = map((s)->caalias(s[:meta][:ca2], language), sexesyrsplots)
+	country = map((s)->conf["countries"][string(s[:meta][:country])]["alias"][language], 
+		sexesyrsplots)
+	ages = map((s)->ageslice(s[:meta][:sage], s[:meta][:eage],
+		s[:meta][:agemean], language)[:alias], sexesyrsplots)
+	aldict = Dict(:ca1 => ca1, :ca2 => ca2, :country => country, :ages => ages)
+end
+
+unicount(i) = size(unique(i))[1]
+
 function plot_sexesrats(sexesyrsplots, language, outfile, showplot, numsex = 1, denomsex = 2)
 	preplot(outfile)
 	numsexalias = conf["sexes"][string(numsex)]["alias"][language]
 	denomsexalias = conf["sexes"][string(denomsex)]["alias"][language]
-	figtitle = "Relativt antal döda $numsexalias/$denomsexalias"
+	srals = srataliases(sexesyrsplots, language)
+	figtitle = "$(dthalias(language)) $numsexalias/$denomsexalias"
+	if unicount(srals[:ca1]) == 1
+		figtitle = "$figtitle $(srals[:ca1][1])"
+	end
+	if unicount(srals[:ca2]) == 1
+		figtitle = "$figtitle/$(srals[:ca2][1])"
+	end
+	if unicount(srals[:country]) == 1
+		figtitle = "$figtitle, $(srals[:country][1])"
+	end
+	if unicount(srals[:ages]) == 1
+		figtitle = "$figtitle, $(srals[:ages][1])"
+	end
 	p = bp.figure(output_backend = obend, title = figtitle, toolbar_location = "below", toolbar_sticky = false,
 		plot_width = 800, plot_height = 600)
 	sratlegends = []
@@ -260,11 +285,19 @@ function plot_sexesrats(sexesyrsplots, language, outfile, showplot, numsex = 1, 
 		col = bpal.Category20[20][mod1(i, 20)]
 		sratcirc = p[:circle](sratframe[:Year], sratframe[:value], color = col)
 		sratline = p[:line](sratframe[:Year], sratsm, color = col)
-		ca1alias = caalias(meta[:ca1], language)
-		ca2alias = caalias(meta[:ca2], language)
-		ctryalias = conf["countries"][string(meta[:country])]["alias"][language]
-		ages = ageslice(meta[:sage], meta[:eage], meta[:agemean], language)
-		sratleg = "$ca1alias/$ca2alias, $ctryalias, $(ages[:alias])"
+		srateleg = ""
+		if unicount(srals[:ca1]) > 1
+			sratleg = "$(srals[:ca1][i])"
+		end
+		if unicount(srals[:ca2]) > 1
+			sratleg = "$sratleg/$(srals[:ca2][i])"
+		end
+		if unicount(srals[:country]) > 1
+			sratleg = "$sratleg, $(srals[:country][i])"
+		end
+		if unicount(srals[:ages]) > 1
+			sratleg = "$sratleg, $(srals[:ages][i])"
+		end
 		sratlegends = vcat(sratlegends, (sratleg, [sratcirc]))
 	end
 	legend = bml[:Legend](items = sratlegends, location = (0, -30))
