@@ -256,7 +256,7 @@ end
 unicount(i) = size(unique(i))[1]
 
 function plot_sexesrats(sexesyrsplots, language, outfile, showplot,
-	sexesratio = true, numsex = 1, denomsex = 2)
+	sexesratio = true, numsex = 1, denomsex = 2, y_axis_type = "linear")
 	preplot(outfile)
 	numsexalias = conf["sexes"][string(numsex)]["alias"][language]
 	denomsexalias = conf["sexes"][string(denomsex)]["alias"][language]
@@ -282,7 +282,7 @@ function plot_sexesrats(sexesyrsplots, language, outfile, showplot,
 	end
 	p = bp.figure(output_backend = obend, title = figtitle, y_axis_label = ylab,
 		toolbar_location = "below", toolbar_sticky = false,
-		plot_width = 800, plot_height = 600)
+		plot_width = 800, plot_height = 600, y_axis_type = y_axis_type)
 	sratlegends = []
 	for (i, syplot) in enumerate(sexesyrsplots)
 		meta = syplot[:meta]
