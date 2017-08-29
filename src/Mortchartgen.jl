@@ -255,12 +255,19 @@ end
 
 unicount(i) = size(unique(i))[1]
 
-function plot_sexesrats(sexesyrsplots, language, outfile, showplot, numsex = 1, denomsex = 2)
+function plot_sexesrats(sexesyrsplots, language, outfile, showplot,
+	sexesratio = true, numsex = 1, denomsex = 2)
 	preplot(outfile)
 	numsexalias = conf["sexes"][string(numsex)]["alias"][language]
 	denomsexalias = conf["sexes"][string(denomsex)]["alias"][language]
 	srals = srataliases(sexesyrsplots, language)
-	figtitle = "$(dthalias(language)) $numsexalias/$denomsexalias"
+	figtitle = "$(dthalias(language))" 
+	if sexesratio
+		figtitle = "$figtitle $numsexalias/$denomsexalias"
+	else
+		figtitle = "$figtitle $numsexalias"
+	end
+	ylab = ""
 	if unicount(srals[:ca1]) == 1
 		figtitle = "$figtitle $(srals[:ca1][1])"
 	end
@@ -271,21 +278,27 @@ function plot_sexesrats(sexesyrsplots, language, outfile, showplot, numsex = 1, 
 		figtitle = "$figtitle, $(srals[:country][1])"
 	end
 	if unicount(srals[:ages]) == 1
-		figtitle = "$figtitle, $(srals[:ages][1])"
+		ylab = srals[:ages][1]
 	end
-	p = bp.figure(output_backend = obend, title = figtitle, toolbar_location = "below", toolbar_sticky = false,
+	p = bp.figure(output_backend = obend, title = figtitle, y_axis_label = ylab,
+		toolbar_location = "below", toolbar_sticky = false,
 		plot_width = 800, plot_height = 600)
 	sratlegends = []
 	for (i, syplot) in enumerate(sexesyrsplots)
 		meta = syplot[:meta]
-		sratframe = sexesrat(syplot, numsex, denomsex)
-		yrfloatarr = convert(Array{Float64}, sratframe[:Year])
-		valarr = convert(Array, sratframe[:value])
-		sratsm = Loess.predict(loess(yrfloatarr, valarr), yrfloatarr)
 		col = bpal.Category20[20][mod1(i, 20)]
+		if sexesratio
+			sratframe = sexesrat(syplot, numsex, denomsex)
+			yrfloatarr = convert(Array{Float64}, sratframe[:Year])
+			valarr = convert(Array, sratframe[:value])
+			sratsm = Loess.predict(loess(yrfloatarr, valarr), yrfloatarr)
+		else
+			sratframe = syplot[numsex][:propframe]
+			sratsm = syplot[numsex][:propsm]
+		end
 		sratcirc = p[:circle](sratframe[:Year], sratframe[:value], color = col)
 		sratline = p[:line](sratframe[:Year], sratsm, color = col)
-		srateleg = ""
+		sratleg = ""
 		if unicount(srals[:ca1]) > 1
 			sratleg = "$(srals[:ca1][i])"
 		end
