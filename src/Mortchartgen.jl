@@ -9,6 +9,7 @@ bml = pyimport("bokeh.models")
 mainpath = normpath(Pkg.dir(), "Mortchartgen")
 datapath = normpath(mainpath, "data")
 chartpath =  normpath(mainpath, "charts")
+tmpoutpath = normpath(tempdir(), "mout.html")
 mkpath(chartpath)
 conf = JSON.parsefile(normpath(datapath, "chartgen.json"),
 	dicttype=DataStructures.OrderedDict)
@@ -198,32 +199,51 @@ function postplot(figure, showplot)
 end
 
 function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
-	framedict, language, outfile, showplot)
+	framedict, language, outfile, showplot, apctype = "pa", bcoh = 1900)
 	preplot(outfile)
 	ctryalias = conf["countries"][string(country)]["alias"][language]
-	pframes = propplotframes(ca1, ca2, framedict, language)
 	ages = ageslice(sage, eage, agemean, language)
 	agealias = ages[:alias]
 	agelist = ages[:agelist]
-	figtitle = "$(dthalias(language)) $(pframes[:ca1alias])/$(pframes[:ca2alias]) $ctryalias"
-	p = bp.figure(output_backend = obend, title = figtitle, y_axis_label = agealias,
+	ca1alias = caalias(ca1, language)
+	ca2alias = caalias(ca2, language)
+	figtitle = "$(dthalias(language)) $ca1alias/$ca2alias $ctryalias"
+	if (apctype == "pa" || apctype == "pc")
+		xdict = (sage, eage)
+		xcol = :Year
+		ylab = agealias
+		ages = [(sage, eage)]
+	elseif (apctype == "ap" || apctype == "ac")
+		if apctype == "ap"
+			xdict = years
+			ylab = string(years)
+		else
+			xdict = bcoh
+			ylab = string(bcoh)
+		end
+		xcol = :Age
+		ages = collect(map((a)->(a,a), sage:eage))
+	end
+	p = bp.figure(output_backend = obend, title = figtitle, y_axis_label = ylab,
 		toolbar_location = "below", toolbar_sticky = false,
 		plot_width = 600, plot_height = 600)
 	sexlegends = []
 	minvals = []
 	meta = Dict(:ca1 => ca1, :ca2 => ca2, :country => country,
-		:sage => sage, :eage => eage, :agemean => agemean)
+		:sage => sage, :eage => eage, :agemean => agemean,
+		:apctype => apctype)
 	propframes = Dict()
 	for sex in sexes
 		sexalias = conf["sexes"][string(sex)]["alias"][language]
 		col = conf["sexes"][string(sex)]["color"]
-		propframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], 
-			sex, country, agelist, years, agemean, :Year)
-		yrfloatarr = convert(Array{Float64}, propframe[:Year])
+		propframe = propplot_agesyrs(ca1, ca2, sex, country, ages,
+			years, agemean, framedict, language, "linear", tmpoutpath,
+			false, apctype)[xdict][:frame]
+		yrfloatarr = convert(Array{Float64}, propframe[xcol])
 		valarr = convert(Array, propframe[:value])
 		propsm = Loess.predict(loess(yrfloatarr, valarr), yrfloatarr)
-		sexcirc = p[:circle](propframe[:Year], propframe[:value], color = col)
-		sexline = p[:line](propframe[:Year], propsm, color = col)
+		sexcirc = p[:circle](propframe[xcol], propframe[:value], color = col)
+		sexline = p[:line](propframe[xcol], propsm, color = col)
 		sexlegends = vcat(sexlegends,
 			[(sexalias, [sexcirc]); ("$sexalias loess", [sexline])]...)
 		minvals = vcat(minvals, minimum(propframe[:value]))
@@ -232,7 +252,9 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 	propframes[:meta] = meta
 	legend = bml[:Legend](items = sexlegends, location = (0, -30))
 	p[:add_layout](legend, "right")
-	p[:add_layout](listlabels(country, years, minvals, framedict))
+	if apctype == "pa"
+		p[:add_layout](listlabels(country, years, minvals, framedict))
+	end
 	p[:add_tools](bml[:CrosshairTool]())
 	postplot(p, showplot)
 	propframes
@@ -256,6 +278,7 @@ end
 
 unicount(i) = size(unique(i))[1]
 
+# Takes an array of apctype "pa" plots.
 function plot_sexesrats(sexesyrsplots, language, outfile, showplot,
 	sexesratio = true, numsex = 1, denomsex = 2, y_axis_type = "linear")
 	preplot(outfile)
@@ -355,18 +378,18 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 		framedicts = values(propframes)
 		ageframes = map((agdict)->DataFrame(Year = agdict[:frame][:Year],
 			value = agdict[:frame][:value],
-			age = agdict[:ages][:agest]),
+			Age = agdict[:ages][:agest]),
 			framedicts)
 		ageframe = vcat(ageframes...)
 		propframes = Dict()
 		uniyears = sort!(unique(ageframe[:Year]))
 		for year in uniyears
 			propframe = ageframe[ageframe[:Year].==year, :]
-			sort!(propframe, cols=[:age])
+			sort!(propframe, cols=[:Age])
 			col = bpal.Category20[20][mod1(year, 20)]
-			yrline = p[:line](propframe[:age], propframe[:value], color = col)
+			yrline = p[:line](propframe[:Age], propframe[:value], color = col)
 			legends = vcat(legends, (string(year), [yrline]))
-			propframes[year] = propframe
+			propframes[year] = Dict(:frame => propframe)
 		end
 	end
 	propframes[:meta] = meta
