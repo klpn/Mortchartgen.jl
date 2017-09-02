@@ -157,6 +157,7 @@ function ageslice(sage, eage, agemean, language)
 	end
 	Dict(:agelist => ages[sage:eage],
 		:alias => "$(agest[sage])\u2013$(ageend[eage])$agemeanstr",
+		:agest => agest[sage], :ageend => ageend[eage],
 		:color => bpal.Category20[20][mod1(sage, 20)])
 end
 
@@ -320,7 +321,7 @@ function plot_sexesrats(sexesyrsplots, language, outfile, showplot,
 end
 
 function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
-	framedict, language, y_axis_type, outfile, showplot)
+	framedict, language, y_axis_type, outfile, showplot, apctype = "pa")
 	preplot(outfile)
 	ctryalias = conf["countries"][string(country)]["alias"][language]
 	pframes = propplotframes(ca1, ca2, framedict, language)
@@ -329,7 +330,7 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 	p = bp.figure(output_backend = obend, title = figtitle, y_axis_type = y_axis_type,
 		toolbar_location = "below", toolbar_sticky = false,
 		plot_width = 600, plot_height = 600)
-	agelegends = []
+	legends = []
 	minvals = []
 	meta = Dict(:ca1 => ca1, :ca2 => ca2, :sex => sex, :country => country,
 		:agemean => agemean)
@@ -340,15 +341,40 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 		agelist = ages[:agelist]
 		propframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], 
 			sex, country, agelist, years, agemean, :Year)
-		ageline = p[:line](propframe[:Year], propframe[:value], color = ages[:color])
-		agelegends = vcat(agelegends, (agealias, [ageline]))
+		if (apctype == "pc" || apctype == "ac")
+			propframe[:Year] = propframe[:Year].-ages[:agest]
+		end
+		if (apctype == "pa" || apctype == "pc")
+			ageline = p[:line](propframe[:Year], propframe[:value], color = ages[:color])
+			legends = vcat(legends, (agealias, [ageline]))
+		end
 		minvals = vcat(minvals, minimum(propframe[:value]))
-		propframes[agealias] = propframe
+		propframes[agetuple] = Dict(:frame => propframe, :ages => ages)
+	end
+	if (apctype == "ap" || apctype == "ac")
+		framedicts = values(propframes)
+		ageframes = map((agdict)->DataFrame(Year = agdict[:frame][:Year],
+			value = agdict[:frame][:value],
+			age = agdict[:ages][:agest]),
+			framedicts)
+		ageframe = vcat(ageframes...)
+		propframes = Dict()
+		uniyears = sort!(unique(ageframe[:Year]))
+		for year in uniyears
+			propframe = ageframe[ageframe[:Year].==year, :]
+			sort!(propframe, cols=[:age])
+			col = bpal.Category20[20][mod1(year, 20)]
+			yrline = p[:line](propframe[:age], propframe[:value], color = col)
+			legends = vcat(legends, (string(year), [yrline]))
+			propframes[year] = propframe
+		end
 	end
 	propframes[:meta] = meta
-	legend = bml[:Legend](items = agelegends, location = (0, -30))
+	legend = bml[:Legend](items = legends, location = (0, -30))
 	p[:add_layout](legend, "right")
-	p[:add_layout](listlabels(country, years, minvals, framedict))
+	if apctype == "pa"
+		p[:add_layout](listlabels(country, years, minvals, framedict))
+	end
 	postplot(p, showplot)
 	propframes
 end
