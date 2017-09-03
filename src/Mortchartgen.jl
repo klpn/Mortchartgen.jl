@@ -199,7 +199,7 @@ function postplot(figure, showplot)
 end
 
 function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
-	framedict, language, outfile, showplot, apctype = "pa", bcoh = 1900)
+	framedict, language, outfile, showplot, apctype = "pa", acbcoh = 1900)
 	preplot(outfile)
 	ctryalias = conf["countries"][string(country)]["alias"][language]
 	ages = ageslice(sage, eage, agemean, language)
@@ -218,8 +218,8 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 			xdict = years
 			ylab = string(years)
 		else
-			xdict = bcoh
-			ylab = string(bcoh)
+			xdict = acbcoh
+			ylab = string(acbcoh)
 		end
 		xcol = :Age
 		ages = collect(map((a)->(a,a), sage:eage))
@@ -231,7 +231,7 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 	minvals = []
 	meta = Dict(:ca1 => ca1, :ca2 => ca2, :country => country,
 		:sage => sage, :eage => eage, :agemean => agemean,
-		:apctype => apctype)
+		:apctype => apctype, :years => years, :acbcoh => acbcoh)
 	propframes = Dict()
 	for sex in sexes
 		sexalias = conf["sexes"][string(sex)]["alias"][language]
@@ -260,10 +260,13 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 	propframes
 end
 
-function sexesrat(sexesyrsplot, numsex, denomsex)
-	years = sexesyrsplot[numsex][:propframe][:Year]
+function sexesrat(sexesyrsplot, numsex, denomsex, xcol)
+	xs = sexesyrsplot[numsex][:propframe][xcol]
 	values = sexesyrsplot[numsex][:propframe][:value]./sexesyrsplot[denomsex][:propframe][:value]
-	DataFrame(Year = years, value = values)
+	df = DataFrame()
+	df[xcol] = xs
+	df[:value] = values
+	df
 end
 
 function srataliases(sexesyrsplots, language)
@@ -273,12 +276,15 @@ function srataliases(sexesyrsplots, language)
 		sexesyrsplots)
 	ages = map((s)->ageslice(s[:meta][:sage], s[:meta][:eage],
 		s[:meta][:agemean], language)[:alias], sexesyrsplots)
-	aldict = Dict(:ca1 => ca1, :ca2 => ca2, :country => country, :ages => ages)
+	years = map((s)->string(s[:meta][:years]), sexesyrsplots)
+	acbcohs = map((s)->string(s[:meta][:acbcoh]), sexesyrsplots)
+	aldict = Dict(:ca1 => ca1, :ca2 => ca2, :country => country, :ages => ages,
+		:years => years, :acbcohs => acbcohs)
 end
 
 unicount(i) = size(unique(i))[1]
 
-# Takes an array of apctype "pa" plots.
+# Takes an array of sexesyrsplots with the same apctype.
 function plot_sexesrats(sexesyrsplots, language, outfile, showplot,
 	sexesratio = true, numsex = 1, denomsex = 2, y_axis_type = "linear")
 	preplot(outfile)
@@ -286,6 +292,7 @@ function plot_sexesrats(sexesyrsplots, language, outfile, showplot,
 	denomsexalias = conf["sexes"][string(denomsex)]["alias"][language]
 	srals = srataliases(sexesyrsplots, language)
 	figtitle = "$(dthalias(language))" 
+	apctype = sexesyrsplots[1][:meta][:apctype]
 	if sexesratio
 		figtitle = "$figtitle $numsexalias/$denomsexalias"
 	else
@@ -301,8 +308,21 @@ function plot_sexesrats(sexesyrsplots, language, outfile, showplot,
 	if unicount(srals[:country]) == 1
 		figtitle = "$figtitle, $(srals[:country][1])"
 	end
-	if unicount(srals[:ages]) == 1
-		ylab = srals[:ages][1]
+	if (apctype == "pa" || apctype == "pc")
+		xcol = :Year
+		if unicount(srals[:ages]) == 1
+			ylab = srals[:ages][1]
+		end
+	elseif apctype == "ap"
+		xcol = :Age
+		if unicount(srals[:years]) == 1
+			ylab = srals[:years][1]
+		end
+	elseif apctype == "ac"
+		xcol = :Age
+		if unicount(srals[:acbcohs]) == 1
+			ylab = srals[:acbcohs][1]
+		end
 	end
 	p = bp.figure(output_backend = obend, title = figtitle, y_axis_label = ylab,
 		toolbar_location = "below", toolbar_sticky = false,
@@ -312,16 +332,16 @@ function plot_sexesrats(sexesyrsplots, language, outfile, showplot,
 		meta = syplot[:meta]
 		col = bpal.Category20[20][mod1(i, 20)]
 		if sexesratio
-			sratframe = sexesrat(syplot, numsex, denomsex)
-			yrfloatarr = convert(Array{Float64}, sratframe[:Year])
+			sratframe = sexesrat(syplot, numsex, denomsex, xcol)
+			yrfloatarr = convert(Array{Float64}, sratframe[xcol])
 			valarr = convert(Array, sratframe[:value])
 			sratsm = Loess.predict(loess(yrfloatarr, valarr), yrfloatarr)
 		else
 			sratframe = syplot[numsex][:propframe]
 			sratsm = syplot[numsex][:propsm]
 		end
-		sratcirc = p[:circle](sratframe[:Year], sratframe[:value], color = col)
-		sratline = p[:line](sratframe[:Year], sratsm, color = col)
+		sratcirc = p[:circle](sratframe[xcol], sratframe[:value], color = col)
+		sratline = p[:line](sratframe[xcol], sratsm, color = col)
 		sratleg = ""
 		if unicount(srals[:ca1]) > 1
 			sratleg = "$(srals[:ca1][i])"
@@ -332,8 +352,18 @@ function plot_sexesrats(sexesyrsplots, language, outfile, showplot,
 		if unicount(srals[:country]) > 1
 			sratleg = "$sratleg, $(srals[:country][i])"
 		end
-		if unicount(srals[:ages]) > 1
-			sratleg = "$sratleg, $(srals[:ages][i])"
+		if (apctype == "pa" || apctype == "pc")
+			if unicount(srals[:ages]) > 1
+				sratleg = "$sratleg, $(srals[:ages][i])"
+			end
+		elseif apctype == "ap"
+			if unicount(srals[:years]) > 1
+				sratleg = "$sratleg, $(srals[:years][i])"
+			end
+		elseif apctype == "ac"
+			if unicount(srals[:acbcohs]) > 1
+				sratleg = "$sratleg, $(srals[:acbcohs][i])"
+			end
 		end
 		sratlegends = vcat(sratlegends, (sratleg, [sratcirc]))
 	end
