@@ -823,6 +823,31 @@
             "sex": [2,1],
             "lowerage": 9
         },
+        "straf": {
+            "alias": {
+		    "en": "stroke and atrial fibrillation",
+		    "sv": "slaganfall och förmaksflimmer"
+	    },
+            "causeclass": 3,
+            "causeexpr": {
+                "07A": "A070",
+                "08A": "A085",
+                "09B": "B29$",
+                "10": "(I6|F01|I48)",
+                "101": "1069"
+            },
+            "classtot": false,
+            "codedesc": {
+		    "en": "ICD-6/7: 330--334; ICD-8/9: 430--438; ICD-10: F01, I48, I60--I69",
+		    "sv": "ICD-6/7: 330--334; ICD-8/9: 430--438; ICD-10: F01, I48, I60--I69"
+	    },
+            "note": {
+		    "en": "Includes cerebral haemorrhage, cerebral infarction and other cerebrovascular diseases. For ICD-10 with detailed list, vascular dementia and atrial fibrillation (in recent years often reported as underlying cause of cerebral infarction) are also included.",
+		    "sv": "Inkluderar hjärnblödning, hjärninfarkt och andra sjukdomar i hjärnans blodkärl. För ICD-10 inkluderas även vaskulär demens och förmaksflimmer (som på senare år ofta rapporteras som underliggande orsak till hjärninfarkt)."
+	    },
+            "sex": [2,1],
+            "lowerage": 9
+        },
         "sui": {
             "alias": {
 		    "en": "suicide",
