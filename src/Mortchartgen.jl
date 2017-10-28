@@ -8,7 +8,7 @@ bml = pyimport("bokeh.models")
 
 mainpath = normpath(Pkg.dir(), "Mortchartgen")
 datapath = normpath(mainpath, "data")
-chartpath =  normpath(mainpath, "charts")
+chartpath = normpath(mainpath, "charts")
 tmpoutpath = normpath(tempdir(), "mout.html")
 mkpath(chartpath)
 conf = JSON.parsefile(normpath(datapath, "chartgen.json"),
@@ -256,6 +256,7 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 		p[:add_layout](listlabels(country, years, minvals, framedict))
 	end
 	p[:add_tools](bml[:CrosshairTool]())
+	bp.output_file(outfile)
 	postplot(p, showplot)
 	propframes
 end
@@ -631,6 +632,7 @@ function childplot(framedict, language, plottype, ca1, countries, years, yrtups)
 		ages = batchages_caflt(ca1)
 		yrs = batchplotyrs(child, plottype) 
 		for age in ages
+			print("$age\n")
 			agedict = agebatchplot(framedict, age, plottype, language, ca1, child,
 				countries, yrs[1], yrs[2], sexes)
 			agedicts = vcat(agedicts, agedict)

@@ -4,37 +4,44 @@ datapath = normpath(Pkg.dir(), "Mortchartgen", "data")
 
 dllist = ["documentation"; "availability"; "country_codes"; "notes"; "Pop";
 	"morticd07"; "morticd08"; "morticd09"; "Morticd10_part1"; "Morticd10_part2";
-	"WPP2015_DB04_Population_By_Age_Annual"]
+	"WPP2017_PopulationByAgeSex_Medium"]
 
 tablelist = ["MortIcd7"; "Morticd8"; "Morticd9"; "Morticd10_part1";
 	"Morticd10_part2"; "pop"]
 
+whosuff = ".zip"
+wppsuff = ".csv"
+
 function download_who(dlpath = ".", filelist = dllist)
 	preurl_def = "http://www.who.int/entity/healthinfo/statistics/"
 	preurl_pop = "http://www.who.int/entity/healthinfo/"
-	preurl_wpp = "https://esa.un.org/unpd/wpp/DVD/Files/1_Indicators%20(Standard)/ASCII_FILES/"
-	filesuff = ".zip"
+	preurl_wpp = "https://esa.un.org/unpd/wpp/DVD/Files/1_Indicators%20(Standard)/CSV_FILES/"
 	urlparams = Dict("ua" => "1")
 	wppfile = dllist[end]
 
 	for filename in filelist
-		filefullname = *(filename, filesuff)
-		dlfilepath = normpath(dlpath, filefullname)
 		if filename == "Pop"
 			preurl = preurl_pop
+			filesuff = whosuff
 		elseif filename == wppfile
 			preurl = preurl_wpp
+			filesuff = wppsuff
 		else
 			preurl = preurl_def
+			filesuff = whosuff
 		end
+		filefullname = *(filename, filesuff)
+		dlfilepath = normpath(dlpath, filefullname)
 		url = *(preurl, filefullname)
 		print("$url\n$dlfilepath\n")
 		Requests.save(Requests.get(url; query = urlparams), dlfilepath)
-		r = ZipFile.Reader(dlfilepath)
-		for f in r.files
-			write(normpath(dlpath, f.name), read(f))
+		if filesuff == ".zip"
+			r = ZipFile.Reader(dlfilepath)
+			for f in r.files
+				write(normpath(dlpath, f.name), read(f))
+			end
+			close(r)
 		end
-		close(r)
 	end
 end
 
@@ -56,28 +63,24 @@ function table_import(dlpath = ".",
 		remove_destination = true)
 end
 
-function wpp_convert(dlpath = ".", syr = 1990, eyr = 2015)
-	addages = map((x,y)->Symbol("Pop_$(x)_$(y)"), 5:5:95, [9:5:94;100])
-	inclages = map((x,y)->Symbol("Pop_$(x)_$(y)"), [0;0:5:95], [100;4:5:94;100])
-	whoages = map((x)->Symbol("Age$x"), [1;2;7:25])
-	dropcols = [:LocID; :Location; :VarID; :Variant; :MidPeriod; :Sex; :Pop_80_100; :Pop_95_99; :Pop_100]
+function wpp_convert(dlpath = ".", syr = 1990, eyr = 2016)
+	whoages = map((x)->Symbol("Age$x"), [7:25;25])
+	wppages = [map((x,y)->"$(x)-$(y)", 5:5:95, 9:5:99); "100+"]
+	ages = DataFrame(variable = whoages, AgeGrp = wppages)
 	country_codes = readtable(normpath(datapath, "country_codes"))
 	rename!(country_codes, [:country; :name], [:Country; :Location])
-	wpp = readtable(normpath(dlpath, "WPP2015_DB04_Population_By_Age_Annual.csv"))
-	wpp = wpp[((wpp[:SexID].<3) & (wpp[:Time].>=syr) & (wpp[:Time].<=eyr)), :]
+	wpp = readtable(normpath(dlpath, *(dllist[end], wppsuff)))
+	wpp = wpp[((wpp[:Time].>=syr) .& (wpp[:Time].<=eyr)), :]
 	wpp = join(wpp, country_codes, on = :Location)
-	wpp[:Pop_95_100] = wpp[:Pop_95_99] .+ wpp[:Pop_100]
-	wpp[:Pop_0_100] = wpp[:Pop_0_4]
-
-	for age in addages
-		wpp[:Pop_0_100] = wpp[:Pop_0_100] .+ wpp[age]
+	wpp = join(wpp, ages, on = :AgeGrp)
+	wppsexes = Dict()
+	for (i, sexcol) in enumerate([:PopMale, :PopFemale])
+		wppsexes[i] = DataFrame(variable = wpp[:variable], value = wpp[sexcol] .* 1000,
+			Sex = i, Year = wpp[:Time], Country = wpp[:Country])
 	end
-
-	delete!(wpp, dropcols)
-	rename!(wpp, inclages, whoages)
-
-	wpp_long = stack(wpp, whoages)
-	wpp_long = DataFrame(variable = wpp_long[:variable], value = wpp_long[:value] .* 1000,
-		Sex = wpp_long[:SexID], Year = wpp_long[:Time], Country = wpp_long[:Country])
-	writetable(normpath(datapath, "wppconverted.csv"), wpp_long)
+	wpp = aggregate(vcat(values(wppsexes)...), [:variable; :Year; :Sex; :Country], sum)
+	wpp = DataFrame(variable = wpp[:variable], value = wpp[:value_sum], Sex = wpp[:Sex],
+		Year = wpp[:Year], Country = wpp[:Country])
+	sort!(wpp, cols = [order(:variable, by = (x)->parse("$x"[4:end])); :Country; :Year; :Sex])
+	writetable(normpath(datapath, "wppconverted.csv"), wpp)
 end

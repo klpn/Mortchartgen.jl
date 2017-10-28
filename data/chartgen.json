@@ -977,7 +977,7 @@
 		    "sv": "Kanada"
 	    },
             "countryclass": 1,
-            "endyear": 2012,
+            "endyear": 2013,
             "iso3166": "CA",
             "startyear": 1950,
 	    "wppstart": 2006
@@ -988,7 +988,7 @@
 		    "sv": "USA"
 	    },
             "countryclass": 1,
-            "endyear": 2014,
+            "endyear": 2015,
             "iso3166": "US",
             "startyear": 1950,
 	    "wppstart": 2008
@@ -1001,7 +1001,7 @@
             "countryclass": 1,
             "endyear": 2014,
             "iso3166": "IL",
-            "startyear": 1957
+            "startyear": 1960
         },
         "3160": {
             "alias": {
@@ -1009,7 +1009,7 @@
 		    "sv": "Japan"
 	    },
             "countryclass": 1,
-            "endyear": 2014,
+            "endyear": 2015,
             "iso3166": "JP",
             "startyear": 1950
         },
@@ -1019,7 +1019,7 @@
 		    "sv": "Österrike"
 	    },
             "countryclass": 1,
-            "endyear": 2014,
+            "endyear": 2016,
             "iso3166": "AT",
             "startyear": 1955
         },
@@ -1039,7 +1039,7 @@
 		    "sv": "Bulgarien"
 	    },
             "countryclass": 1,
-            "endyear": 2013,
+            "endyear": 2014,
             "iso3166": "BG",
             "startyear": 1964
         },
@@ -1049,9 +1049,9 @@
 		    "sv": "Danmark"
 	    },
             "countryclass": 1,
-            "endyear": 2014,
+            "endyear": 2015,
             "iso3166": "DK",
-            "startyear": 1951
+            "startyear": 1952
         },
         "4070": {
             "alias": {
@@ -1069,7 +1069,7 @@
 		    "sv": "Frankrike"
 	    },
             "countryclass": 1,
-            "endyear": 2013,
+            "endyear": 2014,
             "iso3166": "FR",
             "startyear": 1952
         },
@@ -1079,7 +1079,7 @@
 		    "sv": "Tyskland"
 	    },
             "countryclass": 1,
-            "endyear": 2014,
+            "endyear": 2015,
             "iso3166": "DE",
             "startyear": 1952
         },
@@ -1109,7 +1109,7 @@
 		    "sv": "Irland"
 	    },
             "countryclass": 1,
-            "endyear": 2013,
+            "endyear": 2014,
             "iso3166": "IE",
             "startyear": 1950
         },
@@ -1119,7 +1119,7 @@
 		    "sv": "Italien"
 	    },
             "countryclass": 1,
-            "endyear": 2012,
+            "endyear": 2014,
             "iso3166": "IT",
             "startyear": 1951
         },
@@ -1139,7 +1139,7 @@
 		    "sv": "Norge"
 	    },
             "countryclass": 1,
-            "endyear": 2014,
+            "endyear": 2015,
             "iso3166": "NO",
             "startyear": 1951
         },
@@ -1149,7 +1149,7 @@
 		    "sv": "Polen"
 	    },
             "countryclass": 1,
-            "endyear": 2014,
+            "endyear": 2015,
             "iso3166": "PL",
             "startyear": 1959
         },
@@ -1159,7 +1159,7 @@
 		    "sv": "Portugal"
 	    },
             "countryclass": 1,
-            "endyear": 2013,
+            "endyear": 2014,
             "iso3166": "PT",
             "startyear": 1955
         },
@@ -1179,7 +1179,7 @@
 		    "sv": "Spanien"
 	    },
             "countryclass": 1,
-            "endyear": 2014,
+            "endyear": 2015,
             "iso3166": "ES",
             "startyear": 1951
         },
@@ -1209,7 +1209,7 @@
 		    "sv": "England/Wales"
 	    },
             "countryclass": 1,
-            "endyear": 2013,
+            "endyear": 2015,
             "iso3166": "EAW",
             "startyear": 1950
         },
@@ -1219,7 +1219,7 @@
 		    "sv": "Nordirland"
 	    },
             "countryclass": 1,
-            "endyear": 2013,
+            "endyear": 2015,
             "iso3166": "NIR",
             "startyear": 1950
         },
@@ -1229,7 +1229,7 @@
 		    "sv": "Skottland"
 	    },
             "countryclass": 1,
-            "endyear": 2013,
+            "endyear": 2015,
             "iso3166": "SCT",
             "startyear": 1950
         },
@@ -1239,7 +1239,7 @@
 		    "sv": "Australien"
 	    },
             "countryclass": 1,
-            "endyear": 2014,
+            "endyear": 2015,
             "iso3166": "AU",
             "startyear": 1950
         },
@@ -1249,7 +1249,7 @@
 		    "sv": "Nya Zeeland"
 	    },
             "countryclass": 1,
-            "endyear": 2012,
+            "endyear": 2013,
             "iso3166": "NZ",
             "startyear": 1950
         }
