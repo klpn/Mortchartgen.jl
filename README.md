@@ -6,6 +6,10 @@
 
 [![codecov.io](http://codecov.io/github/klpn/Mortchartgen.jl/coverage.svg?branch=master)](http://codecov.io/github/klpn/Mortchartgen.jl?branch=master)
 
+The current version av Mortchartgen causes segfaults with Julia 1.x earlier
+than 1.1.0-DEV.199, which seems to be related to [a bug with array
+deserialization](https://github.com/JuliaLang/julia/issues/28998).
+
 This package can be used to generate charts of mortality trends from the WHO
 Mortality Database, as well as web templates and documentation for these charts. 
 It is a reimplementation of the
@@ -21,6 +25,12 @@ Besides the Julia requirements, generation of the site requires the following:
    generate interactive charts.
 3. The Haskell [Hakyll](https://github.com/jaspervdj/hakyll) library,
    which is used to generate the site with documentation.
+4. ODBC with a MySQL driver has to be installed in the system. Note that the
+   MySQL queries currently use
+   [ODBC.jl](https://github.com/JuliaDatabases/ODBC.jl) instead of
+   [MySQL.jl](https://github.com/JuliaDatabases/MySQL.jl), because the latter
+   has [unsolved issues with memory leaks in queries with many
+   columns](https://github.com/JuliaDatabases/MySQL.jl/issues/113).
 
 In order to generate the site in a given language (`en` and `sv` are currently
 defined in the configuration file):
@@ -40,17 +50,18 @@ defined in the configuration file):
    calculate mortality rates for some countries where population is lacking in
    WHO Mortality Database for recent years, and converts this data so that it
    can be merged with the population data frame created in the next step.
-3. Save the frames with aggregated causes of death and population in CSV files, by calling
+3. Append the contents in
+   [odbc.ini](https://github.com/klpn/Mortchartgen.jl/blob/master/data/odbc.ini)
+   to your `/etc/odbc.ini` or `$HOME/.odbc.ini`. You may have to edit the
+   settings to suit your MySQL configuration.
+4. Save the frames with aggregated causes of death and population in CSV files, by calling
    `Mortchartgen.save_frames(cgen_frames())` in
    [Mortchartgen.jl](https://github.com/klpn/Mortchartgen.jl/blob/master/src/Mortchartgen.jl).
-   Before this, you may have to edit the `conn_config` object in
-   [chartgen.json](https://github.com/klpn/Mortchartgen.jl/blob/master/data/chartgen.json)
-   to suit your MySQL settings.
    The saved frame can then be reloaded with `frames=Mortchartgen.load_frames()`.
-4. Generate the site files by calling `writeplotsite` with loaded frames, language
+5. Generate the site files by calling `writeplotsite` with loaded frames, language
    and output directory, e.g. `Mortchartgen.writeplotsite(frames, "en",
    normpath(Mortchartgen.mainpath, "mortchart-site-en"))`.
-5. Compile the site generator from the `site.hs` file in the output directory.
+6. Compile the site generator from the `site.hs` file in the output directory.
    Using the Glasgow Haskell Compiler, you can run `ghc --make site` from the shell.
-6. Generate the site itself by running `./site build` in the output directory.
+7. Generate the site itself by running `./site build` in the output directory.
    The site will be placed in the `_site` directory under the output directory.

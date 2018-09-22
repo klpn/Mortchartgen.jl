@@ -999,7 +999,7 @@
 		    "sv": "Israel"
 	    },
             "countryclass": 1,
-            "endyear": 2014,
+            "endyear": 2015,
             "iso3166": "IL",
             "startyear": 1960
         },
@@ -1029,7 +1029,7 @@
 		    "sv": "Belgien"
 	    },
             "countryclass": 1,
-            "endyear": 2014,
+            "endyear": 2015,
             "iso3166": "BE",
             "startyear": 1954
         },
@@ -1089,7 +1089,7 @@
 		    "sv": "Grekland"
 	    },
             "countryclass": 1,
-            "endyear": 2014,
+            "endyear": 2015,
             "iso3166": "GR",
             "startyear": 1961
         },
@@ -1099,7 +1099,7 @@
 		    "sv": "Ungern"
 	    },
             "countryclass": 1,
-            "endyear": 2015,
+            "endyear": 2016,
             "iso3166": "HU",
             "startyear": 1955
         },
@@ -1119,7 +1119,7 @@
 		    "sv": "Italien"
 	    },
             "countryclass": 1,
-            "endyear": 2014,
+            "endyear": 2015,
             "iso3166": "IT",
             "startyear": 1951
         },
@@ -1129,7 +1129,7 @@
 		    "sv": "Nederländerna"
 	    },
             "countryclass": 1,
-            "endyear": 2015,
+            "endyear": 2016,
             "iso3166": "NL",
             "startyear": 1950
         },
@@ -1169,7 +1169,7 @@
 		    "sv": "Rumänien"
 	    },
             "countryclass": 1,
-            "endyear": 2015,
+            "endyear": 2016,
             "iso3166": "RO",
             "startyear": 1969
         },
@@ -1189,7 +1189,7 @@
 		    "sv": "Sverige"
 	    },
             "countryclass": 0,
-            "endyear": 2015,
+            "endyear": 2016,
             "iso3166": "SE",
             "startyear": 1951
         },
@@ -1209,7 +1209,7 @@
 		    "sv": "England/Wales"
 	    },
             "countryclass": 1,
-            "endyear": 2015,
+            "endyear": 2016,
             "iso3166": "EAW",
             "startyear": 1950
         },
@@ -1229,7 +1229,7 @@
 		    "sv": "Skottland"
 	    },
             "countryclass": 1,
-            "endyear": 2015,
+            "endyear": 2016,
             "iso3166": "SCT",
             "startyear": 1950
         },
@@ -1256,10 +1256,8 @@
     },
     "settings": {
         "conn_config": {
-            "database": "Morticd",
-            "host": "localhost",
+            "dsn": "MariaDB-morticd",
             "password": "whomort",
-            "unix_socket": "/run/mysqld/mysqld.sock",
             "user": "whomuser"
         },
         "savecsv": true

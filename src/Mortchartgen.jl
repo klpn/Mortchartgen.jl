@@ -1,12 +1,20 @@
 module Mortchartgen
 
-using DataFrames, DataStructures, JSON, Loess, Mustache, MySQL, PyCall
-@pyimport bokeh as bo
-@pyimport bokeh.plotting as bp
-@pyimport bokeh.palettes as bpal
-bml = pyimport("bokeh.models")
+using CSV, DataFrames, DataStructures, JSON, Loess, Mustache, ODBC, Statistics, PyCall, Missings
 
-mainpath = normpath(Pkg.dir(), "Mortchartgen")
+const bo = PyNULL()
+const bp = PyNULL()
+const bml  = PyNULL()
+const bpal = PyNULL()
+
+function __init__()
+	copy!(bo, pyimport("bokeh"))
+	copy!(bp, pyimport("bokeh.plotting"))
+	copy!(bml, pyimport("bokeh.models"))
+	copy!(bpal, pyimport("bokeh.palettes"))
+end
+
+mainpath = normpath(@__DIR__, "..")
 datapath = normpath(mainpath, "data")
 chartpath = normpath(mainpath, "charts")
 tmpoutpath = normpath(tempdir(), "mout.html")
@@ -14,11 +22,11 @@ mkpath(chartpath)
 conf = JSON.parsefile(normpath(datapath, "chartgen.json"),
 	dicttype=DataStructures.OrderedDict)
 tables = Dict(:deaths => "Deaths", :pop => "Pop")
-wpp = readtable(normpath(datapath, "wppconverted.csv"))
+wpp = CSV.read(normpath(datapath, "wppconverted.csv"))
 dfarrmatch(col, arr) = map((x) -> in(x, arr), Vector(col))
-ctrycodes = map((x)->parse(x), collect(keys(conf["countries"])))
+ctrycodes = map((x)->parse(Int, x), collect(keys(conf["countries"])))
 perc_round(value) = replace("$(round(value, 4))", ".", ",")
-dthalias(language) = ucfirst(conf["deaths"]["alias"][language])
+dthalias(language) = uppercasefirst(conf["deaths"]["alias"][language])
 obend = "svg"
 
 function caalias(cause, language)
@@ -31,16 +39,17 @@ end
 
 function cgen_frames(causes = keys(conf["causes"]))
 	conn_config = conf["settings"]["conn_config"]
-	conn = mysql_connect(conn_config["host"], conn_config["user"],
-		conn_config["password"], conn_config["database"],
-		socket = conn_config["unix_socket"])
+	#conn = MySQL.connect(conn_config["host"], conn_config["user"],
+	#	conn_config["password"], db = conn_config["database"],
+	#	unix_socket = conn_config["unix_socket"])
+	conn = ODBC.DSN(conn_config["dsn"], conn_config["user"], conn_config["password"]) 
 	qstr = *("select Sex,Year,Country,Admin1,",
 		join(map((x)->"$(tables[:pop])$x,", 1:25)),
 		"$(tables[:pop])26 from $(tables[:pop])")
-	popframe = mysql_execute(conn, qstr)
+	popframe = ODBC.query(conn, qstr)
 	rename!(popframe,
-		map((x)->Symbol("$(tables[:pop])$(x)"), 1:26),
-		map((x)->Symbol("Age$(x)"), 1:26))
+		Dict(zip(map((x)->Symbol("$(tables[:pop])$(x)"), 1:26),
+			 map((x)->Symbol("Age$(x)"), 1:26))))
 	dthframes = DataStructures.OrderedDict()
 	for cause in causes
 		causeexpr = conf["causes"][cause]["causeexpr"]
@@ -56,22 +65,22 @@ function cgen_frames(causes = keys(conf["causes"]))
 			"when List REGEXP '10(M|[3-4])' then Cause REGEXP '$(causeexpr["10"])' ", 
 			"when List='101' then Cause REGEXP '$(causeexpr["101"])' end) ",
 			"order by Year")
-		dthframe = aggregate(mysql_execute(conn, qstr),
+		dthframe = aggregate(ODBC.query(conn, qstr),
 				[:Sex, :Year, :List, :Country, :Admin1], sum)
 		rename!(dthframe,
-			map((x)->Symbol("$(tables[:deaths])$(x)_sum"), 1:26),
-			map((x)->Symbol("Age$(x)"), 1:26))
+			Dict(zip(map((x)->Symbol("$(tables[:deaths])$(x)_sum"), 1:26),
+				 map((x)->Symbol("Age$(x)"), 1:26))))
 		dthframes[cause] = hcat(DataFrame(Cause = fill(cause, size(dthframe)[1])),
 			dthframe)
 	end
-	mysql_disconnect(conn)
+	ODBC.disconnect!(conn)
 	frames = Dict(:deaths => vcat(values(dthframes)...), :pop => popframe)
 	for tblkey in keys(tables)
 		frame = frames[tblkey]
 		for r in eachrow(frame)
 			if r[:Country]==4100 && r[:Year]<1990
 				r[:Country] = 4085
-			elseif r[:Country]==3150 && r[:Year]>1974 && !isna(r[:Admin1])
+			elseif r[:Country]==3150 && r[:Year]>1974 && !ismissing(r[:Admin1])
 				r[:Country] = 0
 			end
 		end
@@ -102,7 +111,7 @@ end
 function load_frames()
 	framedict = Dict()
 	for tblkey in keys(tables)
-		framedict[tblkey] = readtable(normpath(datapath, *(string(tblkey), ".csv")))
+		framedict[tblkey] = CSV.read(normpath(datapath, *(string(tblkey), ".csv")))
 		framedict[tblkey][:variable] = map(Symbol, framedict[tblkey][:variable])
 	end
 	framedict
@@ -159,7 +168,7 @@ function ageslice(sage, eage, agemean, language)
 	Dict(:agelist => ages[sage:eage],
 		:alias => "$(agest[sage])\u2013$(ageend[eage])$agemeanstr",
 		:agest => agest[sage], :ageend => ageend[eage],
-		:color => bpal.Category20[20][mod1(sage, 20)])
+		:color => bpal[:Category20][20][mod1(sage, 20)])
 end
 
 function propplotframes(ca1, ca2, framedict, language)
@@ -186,32 +195,25 @@ function listlabels(country, years, minvals, framedict)
 end
 
 function preplot(outfile)
-	bp.reset_output()
-	bp.output_file(outfile)
+	bp[:reset_output]()
+	bp[:output_file](outfile)
 end
 
 function postplot(figure, showplot)
 	if showplot
-		bp.show(figure)
+		bp[:show](figure)
 	else
-		bp.save(figure)
+		bp[:save](figure)
 	end	
 end
 
 function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 	framedict, language, outfile, showplot, apctype = "pa", acbcoh = 1900)
-	preplot(outfile)
-	ctryalias = conf["countries"][string(country)]["alias"][language]
 	ages = ageslice(sage, eage, agemean, language)
-	agealias = ages[:alias]
-	agelist = ages[:agelist]
-	ca1alias = caalias(ca1, language)
-	ca2alias = caalias(ca2, language)
-	figtitle = "$(dthalias(language)) $ca1alias/$ca2alias $ctryalias"
 	if (apctype == "pa" || apctype == "pc")
 		xdict = (sage, eage)
 		xcol = :Year
-		ylab = agealias
+		ylab = ages[:alias]
 		ages = [(sage, eage)]
 	elseif (apctype == "ap" || apctype == "ac")
 		if apctype == "ap"
@@ -224,41 +226,90 @@ function propplot_sexesyrs(ca1, ca2, sexes, country, sage, eage, years, agemean,
 		xcol = :Age
 		ages = collect(map((a)->(a,a), sage:eage))
 	end
-	p = bp.figure(output_backend = obend, title = figtitle, y_axis_label = ylab,
-		toolbar_location = "below", toolbar_sticky = false,
-		plot_width = 600, plot_height = 600)
-	sexlegends = []
-	minvals = []
 	meta = Dict(:ca1 => ca1, :ca2 => ca2, :country => country,
-		:sage => sage, :eage => eage, :agemean => agemean,
-		:apctype => apctype, :years => years, :acbcoh => acbcoh)
+		:sage => sage, :eage => eage, :agemean => agemean, 
+		:apctype => apctype, :years => years, :acbcoh => acbcoh,
+		:xcol => xcol, :ylab => ylab, :plclass => "sexesyrs")
 	propframes = Dict()
 	for sex in sexes
-		sexalias = conf["sexes"][string(sex)]["alias"][language]
-		col = conf["sexes"][string(sex)]["color"]
 		propframe = propplot_agesyrs(ca1, ca2, sex, country, ages,
-			years, agemean, framedict, language, "linear", tmpoutpath,
+			years, agemean, framedict, language, "linear", "",
 			false, apctype)[xdict][:frame]
 		yrfloatarr = convert(Array{Float64}, propframe[xcol])
 		valarr = convert(Array, propframe[:value])
 		propsm = Loess.predict(loess(yrfloatarr, valarr), yrfloatarr)
-		sexcirc = p[:circle](propframe[xcol], propframe[:value], color = col)
-		sexline = p[:line](propframe[xcol], propsm, color = col)
-		sexlegends = vcat(sexlegends,
-			[(sexalias, [sexcirc]); ("$sexalias loess", [sexline])]...)
-		minvals = vcat(minvals, minimum(propframe[:value]))
 		propframes[sex] = Dict(:propframe => propframe, :propsm => propsm)
 	end
 	propframes[:meta] = meta
-	legend = bml[:Legend](items = sexlegends, location = (0, -30))
-	p[:add_layout](legend, "right")
-	if apctype == "pa"
-		p[:add_layout](listlabels(country, years, minvals, framedict))
+	if outfile != ""
+		propframes_render(propframes, language, sexes, outfile, framedict, showplot)
+	end
+	propframes
+end
+
+function propframes_render(propframes, language, propframeds, outfile, framedict, showplot,
+			  x_axis_type = "linear", y_axis_type = "linear")
+	preplot(outfile)
+	meta = propframes[:meta]
+	plclass = meta[:plclass]
+	ca1 = meta[:ca1]
+	ca2 = meta[:ca2]
+	years = meta[:years]
+	apctype = meta[:apctype]
+	ca1alias = caalias(ca1, language)
+	ca2alias = caalias(ca2, language)
+	legends = []
+	minvals = []
+	if plclass == "sexesyrs"
+		country = meta[:country]
+		xcol = meta[:xcol]
+		ylab = meta[:ylab]
+		ctryalias = conf["countries"][string(country)]["alias"][language]
+		figtitle = "$(dthalias(language)) $ca1alias/$ca2alias $ctryalias"
+		p = bp[:figure](output_backend = obend, title = figtitle, y_axis_label = ylab,
+			toolbar_location = "below", toolbar_sticky = false,
+			plot_width = 600, plot_height = 600)
+		for sex in propframeds
+			sexalias = conf["sexes"][string(sex)]["alias"][language]
+			col = conf["sexes"][string(sex)]["color"]
+			propframed = propframes[sex]
+			propframe = propframed[:propframe]
+			propsm = propframed[:propsm]
+			sexcirc = p[:circle](propframe[xcol], propframe[:value], color = col)
+			sexline = p[:line](propframe[xcol], propsm, color = col)
+			legends = vcat(legends,
+				[(sexalias, [sexcirc]); ("$sexalias loess", [sexline])]...)
+			minvals = vcat(minvals, minimum(propframe[:value]))
+		end
+		legend = bml[:Legend](items = legends, location = (0, -30))
+		p[:add_layout](legend, "right")
+		if apctype == "pa"
+			p[:add_layout](listlabels(country, years, minvals, framedict))
+		end
+	elseif plclass == "agesyrs"
+		country = meta[:country]
+		sex = meta[:sex]
+		ctryalias = conf["countries"][string(country)]["alias"][language]
+		sexalias = conf["sexes"][string(sex)]["alias"][language]
+		figtitle = "$(dthalias(language)) $ca1alias/$ca2alias $sexalias $ctryalias"
+		p = bp[:figure](output_backend = obend, title = figtitle, y_axis_type = y_axis_type,
+			toolbar_location = "below", toolbar_sticky = false,
+			plot_width = 600, plot_height = 600)
+		for agetuple in propframeds
+			propframed = propframes[agetuple]
+			propframe = propframed[:frame]
+			ages = propframed[:ages]
+			agealias = ages[:alias]
+			if (apctype == "pa" || apctype == "pc")
+				ageline = p[:line](propframe[:Year], propframe[:value], color = ages[:color])
+				legends = vcat(legends, (ages[:alias], [ageline]))
+			end
+		end
+		legend = bml[:Legend](items = legends, location = (0, -30))
+		p[:add_layout](legend, "right")
 	end
 	p[:add_tools](bml[:CrosshairTool]())
-	bp.output_file(outfile)
 	postplot(p, showplot)
-	propframes
 end
 
 function sexesrat(sexesyrsplot, numsex, denomsex, xcol)
@@ -325,13 +376,13 @@ function plot_sexesrats(sexesyrsplots, language, outfile, showplot,
 			ylab = srals[:acbcohs][1]
 		end
 	end
-	p = bp.figure(output_backend = obend, title = figtitle, y_axis_label = ylab,
+	p = bp[:figure](output_backend = obend, title = figtitle, y_axis_label = ylab,
 		toolbar_location = "below", toolbar_sticky = false,
 		plot_width = 800, plot_height = 600, y_axis_type = y_axis_type)
 	sratlegends = []
 	for (i, syplot) in enumerate(sexesyrsplots)
 		meta = syplot[:meta]
-		col = bpal.Category20[20][mod1(i, 20)]
+		col = bpal[:Category20][20][mod1(i, 20)]
 		if sexesratio
 			sratframe = sexesrat(syplot, numsex, denomsex, xcol)
 			yrfloatarr = convert(Array{Float64}, sratframe[xcol])
@@ -376,31 +427,19 @@ end
 
 function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 	framedict, language, y_axis_type, outfile, showplot, apctype = "pa")
-	preplot(outfile)
-	ctryalias = conf["countries"][string(country)]["alias"][language]
 	pframes = propplotframes(ca1, ca2, framedict, language)
-	sexalias = conf["sexes"][string(sex)]["alias"][language]
-	figtitle = "$(dthalias(language)) $(pframes[:ca1alias])/$(pframes[:ca2alias]) $sexalias $ctryalias"
-	p = bp.figure(output_backend = obend, title = figtitle, y_axis_type = y_axis_type,
-		toolbar_location = "below", toolbar_sticky = false,
-		plot_width = 600, plot_height = 600)
-	legends = []
 	minvals = []
 	meta = Dict(:ca1 => ca1, :ca2 => ca2, :sex => sex, :country => country,
-		:agemean => agemean)
+		    :apctype => apctype, :years => years,
+		    :agemean => agemean, :plclass => "agesyrs")
 	propframes = Dict()
 	for agetuple in agetuples
 		ages = ageslice(agetuple[1], agetuple[2], agemean, language)
-		agealias = ages[:alias]
 		agelist = ages[:agelist]
 		propframe = propgrp(pframes[:ca1frame], pframes[:ca2frame], 
 			sex, country, agelist, years, agemean, :Year)
 		if (apctype == "pc" || apctype == "ac")
 			propframe[:Year] = propframe[:Year].-ages[:agest]
-		end
-		if (apctype == "pa" || apctype == "pc")
-			ageline = p[:line](propframe[:Year], propframe[:value], color = ages[:color])
-			legends = vcat(legends, (agealias, [ageline]))
 		end
 		minvals = vcat(minvals, minimum(propframe[:value]))
 		propframes[agetuple] = Dict(:frame => propframe, :ages => ages)
@@ -417,19 +456,13 @@ function propplot_agesyrs(ca1, ca2, sex, country, agetuples, years, agemean,
 		for year in uniyears
 			propframe = ageframe[ageframe[:Year].==year, :]
 			sort!(propframe, cols=[:Age])
-			col = bpal.Category20[20][mod1(year, 20)]
-			yrline = p[:line](propframe[:Age], propframe[:value], color = col)
-			legends = vcat(legends, (string(year), [yrline]))
 			propframes[year] = Dict(:frame => propframe)
 		end
 	end
 	propframes[:meta] = meta
-	legend = bml[:Legend](items = legends, location = (0, -30))
-	p[:add_layout](legend, "right")
-	if apctype == "pa"
-		p[:add_layout](listlabels(country, years, minvals, framedict))
+	if outfile != ""
+		propframes_render(propframes, language, agetuples, outfile, framedict, showplot)
 	end
-	postplot(p, showplot)
 	propframes
 end
 
@@ -457,7 +490,7 @@ function propscat_yrsctry(ca1, ca2, sex, countries, sage, eage, year1, year2, ag
 			[("befolkning", "@ctrynames"),
 			("$year1", "@year1prop"), 
 			("$year2", "@year2prop")]) 
-	p = bp.figure(output_backend = obend, title = figtitle, x_axis_label = "$year1",
+	p = bp[:figure](output_backend = obend, title = figtitle, x_axis_label = "$year1",
 		y_axis_label = "$year2", plot_width = 600, plot_height = 600)
 	p[:add_tools](hover)
 	p[:circle](x = "year1prop", y = "year2prop", size = 12, source = scatdata)
@@ -493,7 +526,7 @@ function propscat_sexesctry(ca1, ca2, countries, sage, eage, year, agemean,
 			[("befolkning", "@ctrynames"),
 			("$femalias", "@femprop"), 
 			("$malealias", "@maleprop")])
-	p = bp.figure(output_backend = obend, title = figtitle, x_axis_label = femalias,
+	p = bp[:figure](output_backend = obend, title = figtitle, x_axis_label = femalias,
 		y_axis_label = malealias, plot_width = 600, plot_height = 600)
 	p[:add_tools](hover)
 	p[:circle](x = "femprop", y = "maleprop", size = 12, source = scatdata)
@@ -527,13 +560,13 @@ Dict("alias" => *(ageslice(sage, eage, agemean, language)[:alias],
 	conf["sexes"][string(sex)]["alias"][language]),
 	"fname" => fname)
 
-cadict(cause, children, language) = Dict("alias" => ucfirst(caalias(cause, language)),
+cadict(cause, children, language) = Dict("alias" => uppercasefirst(caalias(cause, language)),
 "children" => children, "name" => cause)
 
 function ctryints_flt(countries, year1, year2)
 	countries_flt = filter((ctry)->conf["countries"][ctry]["startyear"]<=year1
 				&& conf["countries"][ctry]["endyear"]>=year2, countries)
-	map((c)->parse(c), countries_flt)
+	map((c)->parse(Int, c), countries_flt)
 end
 
 fname_yrsctry(ca1, ca2, sex, sage, eage, agemean, year1, year2) = 
@@ -558,7 +591,7 @@ function agebatchplot(framedict, age, plottype, language, ca1, child, countries,
 	if plottype == "sexesyrs"
 		fname = fname_sexesyrs(ca1, ca2, child, sage, eage, agemean)
 		outfile = normpath(chartpath, fname)
-		propplot_sexesyrs(ca1, ca2, sexes, parse(child), 
+		propplot_sexesyrs(ca1, ca2, sexes, parse(Int, child), 
 			sage, eage, yr1:yr2,
 			agemean, framedict, language, outfile, false)
 		return agedict_bothsexes(sage, eage, agemean, language, ca2, fname)
@@ -678,7 +711,7 @@ end
 
 function ccflt(causeclass, language)
 	cavals = filter((c)->c["causeclass"]==causeclass, collect(values(conf["causes"])))
-	cadicts = map((c)->Dict("alias" => ucfirst(c["alias"][language]), 
+	cadicts = map((c)->Dict("alias" => uppercasefirst(c["alias"][language]), 
 		"classtot" => c["classtot"], "codedesc" => c["codedesc"][language],
 		"note" => c["note"][language]), cavals)
 	sort!(cadicts, by=((c)->(!(c["classtot"]), c["alias"])))
@@ -718,7 +751,7 @@ function writetempl(language, fname, sitepath)
 			maintempl["maintempldicts"] = map((cc)->
 				Dict("class" => cc,
 				"alias" => conf["causeclasses"][cc]["alias"][language],
-				"causes" => ccflt(parse(cc), language)),
+				"causes" => ccflt(parse(Int, cc), language)),
 				keys(conf["causeclasses"]))
 			maintempl["refhead"] = conf["refhead"][language]
 		end
