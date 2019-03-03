@@ -705,7 +705,7 @@ function batchplot(framedict, language, plottype, causes = collect(keys(conf["ca
 end
 
 function writeplotlist(batchplotdict, outfile)
-	tpl = readstring(normpath(datapath, "plotlist.mustache"))
+	tpl = read(normpath(datapath, "plotlist.mustache"), String)
 	write(outfile, render(tpl, batchplotdict))
 end
 
@@ -720,7 +720,7 @@ end
 function writetempl(language, fname, sitepath)
 	haktemplpath = normpath(sitepath, "templates")
 	mkpath(haktemplpath)
-	tpl = readstring(normpath(datapath, "$fname.mustache"))
+	tpl = read(normpath(datapath, "$fname.mustache"), String)
 	maintempl = Dict()
 	if (fname == "default" || fname == "site")
 		maintempl["maintempldicts"] = map((p)->
@@ -737,7 +737,7 @@ function writetempl(language, fname, sitepath)
 			maintempl["othlangs"] = map((od)->Dict(od),
 				conf["othlangs"][language])
 			maintempl["footer"] =
-				readstring(normpath(datapath, "footer-$language.$ext"))
+				read(normpath(datapath, "footer-$language.$ext"), String)
 		elseif fname == "site"
 			outpath = sitepath
 			maintempl["indexpagetitle"] = conf["indexpagetitle"][language]
@@ -756,7 +756,7 @@ function writetempl(language, fname, sitepath)
 			maintempl["refhead"] = conf["refhead"][language]
 		end
 		outpath = sitepath
-		maintempl["body"] = readstring(normpath(datapath, "$fname-$language.$ext"))
+		maintempl["body"] = read(normpath(datapath, "$fname-$language.$ext"), String)
 	end
 	write(normpath(outpath, "$fname.$ext"), render(tpl, maintempl = maintempl))
 end
