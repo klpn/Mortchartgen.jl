@@ -134,7 +134,8 @@ function listchanges(country, years, framedict)
 end
 
 function grpprop(numframe_sub, denomframe_sub, grpcol, agemean)
-	numdenomframe_sub = join(numframe_sub, denomframe_sub, on = grpcol)
+	numdenomframe_sub =
+		join(numframe_sub, denomframe_sub, on = grpcol, makeunique = true)
 	if agemean
 		propfr_agesp = DataFrame()
 		propfr_agesp[grpcol] = numdenomframe_sub[grpcol]
@@ -168,7 +169,7 @@ function ageslice(sage, eage, agemean, language)
 	Dict(:agelist => ages[sage:eage],
 		:alias => "$(agest[sage])\u2013$(ageend[eage])$agemeanstr",
 		:agest => agest[sage], :ageend => ageend[eage],
-		:color => bpal[:Category20][20][mod1(sage, 20)])
+		:color => bpal.Category20[20][mod1(sage, 20)])
 end
 
 function propplotframes(ca1, ca2, framedict, language)
